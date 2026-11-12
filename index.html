@@ -189,9 +189,25 @@ details[open].card summary:after{content:'▴'}
 .pindots{display:flex;justify-content:center;gap:12px;margin:10px 0}
 .pindots i{width:16px;height:16px;border-radius:50%;background:#e2e8f0}
 .pindots i.on{background:#2563eb}
+
+/* מסך פתיחה */
+#splash{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px;
+ background:radial-gradient(circle at 50% 20%,#fff6c9 0%,#9fe3ee 35%,#3a9bd6 70%,#1e5fa8 100%);transition:opacity .7s,transform .7s}
+#splash.out{opacity:0;transform:scale(1.08);pointer-events:none}
+#splash h1{margin:0;white-space:nowrap;color:#fff;font-size:clamp(30px,9vw,44px);font-weight:800;text-shadow:0 3px 10px rgba(0,0,0,.3);text-align:center;animation:up .8s}
+#splash .vid{width:min(94vw,560px);aspect-ratio:16/9;border-radius:28px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.35),0 0 0 6px #fff,0 0 0 11px #fbbf24;background:#fff;animation:up 1s}
+#splash video{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.13)}
+#splash .go{font-size:24px;padding:16px 34px;border-radius:22px;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+#splash small{color:#fff;opacity:.9;font-weight:600}
 </style>
 </head>
 <body>
+<div id="splash"><h1>🏆 מבצע האלופים</h1>
+<div class="vid"><video id="introVid" src="media/intro.mp4" poster="media/intro-poster.jpg" muted playsinline autoplay preload="auto"></video></div>
+<button class="btn green go" id="splashGo">🎉 נכנסים!</button>
+<small>חי אפליקציות 💙</small></div>
+<audio id="bgSong" src="media/song.mp3" loop preload="auto"></audio>
 <div class="app" id="app"></div>
 <nav class="nav" id="nav">
   <button data-v="home" onclick="go('home')"><span class="i">📅</span>לוח שנה</button>
@@ -352,7 +368,7 @@ function render(){
 }
 function topbar(title,sub,back){
  return `<div class="topbar"><div class="brand">${back?`<button class="iconbtn" onclick="${back}">→</button>`:'<span class="logo">🏆</span>'}<div><h1>${title}</h1>${sub?`<small>${sub}</small>`:''}</div></div>
- <button class="iconbtn" onclick="toggleSound()" title="צלילים">${S.settings.sound?'🔊':'🔇'}</button></div>`;
+ <div class="row" style="gap:6px"><button class="iconbtn" onclick="toggleMusic()" title="מוזיקת רקע" style="${S.settings.music?'':'opacity:.45'}">🎵</button><button class="iconbtn" onclick="toggleSound()" title="צלילים">${S.settings.sound?'🔊':'🔇'}</button></div></div>`;
 }
 function toggleSound(){S.settings.sound=!S.settings.sound;S.settings.voice=S.settings.sound;save();render();toast(S.settings.sound?'🔊 צלילים והקראה פעילים':'🔇 צלילים כבויים')}
 
@@ -635,6 +651,9 @@ function vSettings(){
  // כללי
  h+=`<details class="card" ${V.openSec==='gen'?'open':''}><summary>🔧 כללי, קול וגיבוי</summary><div style="margin-top:10px">
  <label class="switch">🔊 צלילים (מחיאות כפיים, זיקוקים) <input type="checkbox" ${S.settings.sound?'checked':''} onchange="S.settings.sound=this.checked;save()"></label>
+ <label class="switch">🎬 מסך פתיחה עם סרטון <input type="checkbox" ${S.settings.splash!==false?'checked':''} onchange="S.settings.splash=this.checked;save()"></label>
+ <label class="switch">🎵 שיר ברקע <input type="checkbox" ${S.settings.music!==false?'checked':''} onchange="S.settings.music=this.checked;save();this.checked?startMusic(false):stopMusic()"></label>
+ <label class="lbl">עוצמת השיר ברקע (אחרי הכניסה)</label><input type="range" min="0.05" max="1" step="0.05" value="${S.settings.musicVol??0.25}" style="width:100%" oninput="S.settings.musicVol=+this.value;fadeMusic(+this.value,200)" onchange="save()">
  <label class="switch">🗣️ הקראת משפטי עידוד <input type="checkbox" ${S.settings.voice?'checked':''} onchange="S.settings.voice=this.checked;save()"></label>
  <label class="lbl">מהירות הקראה</label><input type="range" min="0.6" max="1.4" step="0.1" value="${S.settings.rate||1}" style="width:100%" onchange="S.settings.rate=+this.value;save()">
  <button class="btn sm gray" onclick="speak('בדיקה! כל הכבוד, אתה אלוף!')">🔈 בדיקת קול</button>
@@ -837,7 +856,7 @@ function loadVoices(){const vs=speechSynthesis.getVoices();heVoice=vs.find(v=>/^
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 function speak(t){
  if(!S.settings.voice||!('speechSynthesis' in window))return;
- try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[!]+/g,'!'));u.lang='he-IL';if(heVoice)u.voice=heVoice;u.rate=S.settings.rate||1;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){}
+ try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[!]+/g,'!'));if(song&&!song.paused){const back=musicTarget;fadeMusic(Math.min(back,0.06),250);u.onend=u.onerror=()=>fadeMusic(back,800)}u.lang='he-IL';if(heVoice)u.voice=heVoice;u.rate=S.settings.rate||1;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){}
 }
 
 /* ================== זיקוקים וקונפטי ================== */
@@ -861,6 +880,35 @@ function runFx(){if(fxRun)return;fxRun=true;
   });
   if(parts.length||now<fwUntil)requestAnimationFrame(loop);else{fxRun=false;fctx.clearRect(0,0,innerWidth,innerHeight)}
  };requestAnimationFrame(loop)}
+
+
+/* ================== מסך פתיחה ומוזיקת רקע ================== */
+S.settings.music=S.settings.music!==false;S.settings.splash=S.settings.splash!==false;
+if(S.settings.musicVol==null)S.settings.musicVol=0.25;
+const song=document.getElementById('bgSong');let musicFade=null,musicTarget=1;
+function fadeMusic(to,ms){clearInterval(musicFade);musicTarget=to;const from=song.volume,t0=Date.now();
+ musicFade=setInterval(()=>{const p=Math.min(1,(Date.now()-t0)/ms);song.volume=Math.max(0,Math.min(1,from+(to-from)*p));if(p>=1)clearInterval(musicFade)},50)}
+function startMusic(full){if(!S.settings.music)return Promise.resolve(false);song.volume=full?1:S.settings.musicVol;return song.play().then(()=>true).catch(()=>false)}
+function stopMusic(){fadeMusic(0,500);setTimeout(()=>song.pause(),550)}
+function toggleMusic(){S.settings.music=!S.settings.music;save();if(S.settings.music){startMusic(false);toast('🎵 מוזיקת רקע פועלת')}else{stopMusic();toast('🎵 המוזיקה כובתה')}render()}
+let entered=false;
+function enterApp(){if(entered)return;entered=true;unlockAudio();
+ const sp=document.getElementById('splash');sp.classList.add('out');setTimeout(()=>{sp.remove()},750);
+ confetti(80);
+ if(S.settings.music){const go=()=>{setTimeout(()=>fadeMusic(S.settings.musicVol,3500),5000)};
+  if(song.paused)startMusic(true).then(ok=>ok&&go());else go();}
+}
+(function initSplash(){
+ const sp=document.getElementById('splash'),v=document.getElementById('introVid');
+ if(!S.settings.splash){sp.remove();entered=true;
+  // בלי מסך פתיחה: המוזיקה מתחילה בנגיעה הראשונה
+  if(S.settings.music)document.addEventListener('pointerdown',function f(){startMusic(false);document.removeEventListener('pointerdown',f)});return}
+ document.getElementById('splashGo').onclick=e=>{e.stopPropagation();enterApp()};
+ // ניסיון להתחיל את השיר מיד; אם הדפדפן חוסם – מתחיל בנגיעה הראשונה במסך
+ startMusic(true).then(ok=>{if(!ok)sp.addEventListener('pointerdown',function f(){startMusic(true);v.currentTime=0;v.play().catch(()=>{});sp.removeEventListener('pointerdown',f)})});
+ v.addEventListener('ended',()=>setTimeout(enterApp,600));
+})();
+document.addEventListener('visibilitychange',()=>{if(!S.settings.music||!entered&&!song.currentTime)return;if(document.hidden)song.pause();else song.play().catch(()=>{})});
 
 /* ================== התחלה ================== */
 render();
