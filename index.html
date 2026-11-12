@@ -53,7 +53,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .btn.block{width:100%;display:block}
 .chip{display:inline-flex;align-items:center;gap:6px;background:#eef4ff;border-radius:999px;padding:5px 12px 5px 6px;font-weight:700;font-size:14px}
 /* bottom nav */
-.nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(255,255,255,.97);box-shadow:0 -6px 20px rgba(0,0,0,.12);border-radius:22px 22px 0 0;display:flex;justify-content:space-around;padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:#fff;box-shadow:0 -6px 20px rgba(0,0,0,.12);border-radius:22px 22px 0 0;display:flex;justify-content:space-around;padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
 .nav button{background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);padding:6px 10px;border-radius:14px;min-width:68px}
 .nav button span.i{font-size:24px}
 .nav button.on{color:#2563eb;background:#e8f0ff}
@@ -63,7 +63,7 @@ input,textarea,select{font-family:inherit;font-size:16px}
 .kid{flex:1 1 140px;min-width:0;background:#fff;border-radius:20px;padding:8px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.12);border:3px solid transparent;font-weight:800;font-size:16px}
 .kid img,.av{border-radius:50%;object-fit:cover;background:#dbeafe}
 .kid img{width:44px;height:44px}
-.kid .pts{white-space:nowrap;font-size:12px;color:var(--muted);font-weight:600;display:block}
+.kid>div{min-width:0}.kid .pts{white-space:normal;font-size:12px;color:var(--muted);font-weight:600;display:block}
 .kid.on{border-color:var(--kc,#2563eb)}
 /* calendar */
 .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -200,6 +200,11 @@ details[open].card summary:after{content:'▴'}
 #splash .go{font-size:24px;padding:16px 34px;border-radius:22px;animation:pulse 1.4s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 #splash small{color:#fff;opacity:.9;font-weight:600}
+
+/* מקום לסמל של נטליפיי מתחת לתפריט */
+html.nbadge .nav{bottom:0;padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+html.nbadge .nav:after{content:'';position:absolute;left:16px;right:16px;bottom:calc(66px + env(safe-area-inset-bottom));border-top:1px solid #eef2f9}
+html.nbadge .app{padding-bottom:calc(220px + env(safe-area-inset-bottom))}
 </style>
 </head>
 <body>
@@ -910,6 +915,7 @@ function enterApp(){if(entered)return;entered=true;unlockAudio();
 })();
 document.addEventListener('visibilitychange',()=>{if(!S.settings.music||!entered&&!song.currentTime)return;if(document.hidden)song.pause();else song.play().catch(()=>{})});
 
+if(/netlify\.app$/i.test(location.hostname))document.documentElement.classList.add('nbadge');
 /* ================== התחלה ================== */
 render();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
