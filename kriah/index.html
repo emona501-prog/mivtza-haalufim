@@ -72,6 +72,8 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .read .w{display:inline-block;padding:0 4px;border-radius:10px;transition:background .25s,color .25s}
 .read .w.ok{color:var(--ok);background:#e2f8ec}
 .read .w.miss{color:var(--bad);background:#ffe8ea}
+.read .w small.said{display:block;font-family:Rubik,sans-serif;font-size:max(12px,.36em);font-weight:600;color:#c0392b;line-height:1.2;margin-top:-4px}
+.score{display:inline-block;background:#efe9ff;color:var(--pri);border-radius:14px;padding:4px 12px;font-weight:800;margin:6px 0}
 .read .w.mark{background:#ffe066;color:var(--txt);box-shadow:0 4px 0 #ffb020;transform:scale(1.12)}
 .read .w.past{color:#b8b2cc}
 .read.tele{display:block;text-align:right;max-height:52vh;overflow-y:auto;scroll-behavior:smooth;padding:26px 18px;line-height:2.2}
@@ -239,15 +241,39 @@ function align(T,Sp){const n=T.length,m=Sp.length;const dp=Array.from({length:n+
  const ok=new Array(n).fill(false);let i=0,j=0;
  while(i<n&&j<m){if(weq(T[i],Sp[j])&&dp[i][j]===dp[i+1][j+1]+1){ok[i]=true;i++;j++;}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++;}
  return ok;}
+/* --- בדיקה מדויקת לפי הניקוד: מכל מילה מנוקדת מייצרים את הכתיבים התקינים שלה (מלא/חסר),
+   ומילה נחשבת נכונה רק אם מה שנשמע הוא אחד מהם. ו׳/י׳ שנוספו או חסרו במקום שהניקוד לא מאפשר = טעות קריאה. */
+const PH={'ע':'א','ח':'כ','ט':'ת','ק':'כ'};
+const phon=w=>w.replace(/[עחטק]/g,c=>PH[c]);
+function wordForms(tok){
+ const units=[];for(const ch of tok){if(/[א-ת]/.test(ch))units.push({l:FIN[ch]||ch,m:''});else if(/[֑-ׇ]/.test(ch)&&units.length)units[units.length-1].m+=ch;}
+ if(!units.length)return null;let forms=[''];const n=units.length;
+ units.forEach((u,i)=>{const m=u.m,has=c=>m.indexOf(c)>=0,next=units[i+1];let base=[u.l],ins=[''];
+  const vowel=/[ְ-ׇֻ]/.test(m);
+  if(u.l==='ש'&&has('ׂ'))base=['ש','ס'];
+  if(u.l==='ו'){if(!has('ֹ')&&!(has('ּ')&&!vowel)&&vowel&&i>0&&i<n-1)base=['ו','וו'];}
+  else if(u.l==='י'){if((vowel||has('ּ'))&&i>0&&i<n-1)base=['י','יי'];}
+  else{if(has('ֹ')||has('ֻ')||has('ֳ')||has('ׇ'))ins=['','ו'];
+   else if((has('ִ')||has('ֵ'))&&!(next&&next.l==='י'))ins=['','י'];
+   else if(has('ָ')&&next&&next.m.indexOf('ְ')>=0&&i<n-2)ins=['','ו'];}
+  const out=[];forms.forEach(f=>base.forEach(b=>ins.forEach(x=>out.push(f+b+x))));forms=out.slice(0,128);});
+ return new Set(forms.map(phon));}
+function weqStrict(T,w){return T.has(phon(w));}
+function alignWith(T,Sp,eq){const n=T.length,m=Sp.length;const dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+ for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=eq(T[i],Sp[j])?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+ const ok=new Array(n).fill(false),pairs=[];let i=0,j=0;
+ while(i<n&&j<m){if(eq(T[i],Sp[j])&&dp[i][j]===dp[i+1][j+1]+1){ok[i]=true;pairs.push([i,j]);i++;j++;}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++;}
+ const said={};let pi=-1,pj=-1;pairs.concat([[n,m]]).forEach(([a,b])=>{for(let k=0;pi+1+k<a&&pj+1+k<b;k++)said[pi+1+k]=Sp[pj+1+k];pi=a;pj=b;});
+ return{ok,said};}
 function evalItem(text,finals,interim){
  const toks=text.split(/\s+/).filter(Boolean);const idx=[],T=[];
- toks.forEach((t,i)=>{const n=norm(t);if(n){idx.push(i);T.push(n.replace(/\s/g,''));}});
+ toks.forEach((t,i)=>{const f=wordForms(t);if(f){idx.push(i);T.push(f);}});
  const inter=interim||'';const cands=[finals.map(a=>a[0]).join(' ')+' '+inter];
  finals.forEach(a=>a.slice(1).forEach(alt=>cands.push(finals.map(b=>b===a?alt:b[0]).join(' ')+' '+inter)));
- let best={ok:new Array(T.length).fill(false),cnt:0};
- cands.slice(0,40).forEach(c=>{const ok=align(T,wordsOf(c));const cnt=ok.filter(Boolean).length;if(cnt>best.cnt)best={ok,cnt};});
- const okTok=toks.map(t=>!norm(t));idx.forEach((ti,k)=>{if(best.ok[k])okTok[ti]=true;});
- return{okTok,cnt:best.cnt,total:T.length,acc:T.length?best.cnt/T.length:1};}
+ let best={ok:new Array(T.length).fill(false),cnt:-1,said:{}};
+ cands.slice(0,40).forEach(c=>{const r=alignWith(T,wordsOf(c),weqStrict);const cnt=r.ok.filter(Boolean).length;if(cnt>best.cnt)best={ok:r.ok,cnt,said:r.said};});
+ const okTok=toks.map(t=>!wordForms(t)),saidTok={};idx.forEach((ti,k)=>{if(best.ok[k])okTok[ti]=true;else if(best.said[k])saidTok[ti]=best.said[k].replace(/[כמנפצ]$/,c=>({'כ':'ך','מ':'ם','נ':'ן','פ':'ף','צ':'ץ'})[c]);});
+ const cnt=Math.max(0,best.cnt);return{okTok,saidTok,cnt,total:T.length,acc:T.length?cnt/T.length:1};}
 
 /* ================= צלילים ואפקטים ================= */
 let AC;function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();}if(AC.state==='suspended')AC.resume();return AC;}
@@ -490,24 +516,30 @@ function parentJudge(ok){if(!P||P.done)return;stopRec();const m=$('mic');if(m){m
  else judge({okTok:toks.map(()=>false),cnt:0,total:toks.length,acc:0},true);}
 function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TYPE[it.type].sent;
  const need=it.type==='sentence'||it.type==='story'?.8:1;const pass=ev.acc>=need;
- document.querySelectorAll('#read .w').forEach((e,i)=>{e.className='w '+(ev.okTok[i]?'ok':'miss');});
+ const toks=it.text.split(/\s+/).filter(Boolean);const said=ev.saidTok||{};
+ document.querySelectorAll('#read .w').forEach((e,i)=>{e.className='w '+(ev.okTok[i]?'ok':'miss');if(!ev.okTok[i])e.innerHTML=esc(toks[i]||'')+(said[i]?`<small class="said">נשמע: ${esc(said[i])}</small>`:'');});
  k.mist=k.mist||{};
+ let pace=null,wpm=0;
+ if(!byParent&&sent&&ev.total>=4&&ev.cnt>0&&P.heard&&P.heard.lastT>P.heard.firstT){const dur=(P.heard.lastT-P.heard.firstT)/1000+.7;wpm=Math.round(ev.total/(dur/60));
+  pace=wpm<S.settings.paceMin?'slow':wpm>S.settings.paceMax?'fast':'good';}
+ const score=byParent?(pass?100:0):Math.round(pace?ev.acc*85+(pace==='good'?15:7):ev.acc*100);
+ const wrongN=ev.total-ev.cnt;
+ const scoreHTML=sent&&!byParent?`<div class="score">📊 ציון: ${score}/100 · ${ev.cnt} מתוך ${ev.total} מילים נכון${wpm?` · ${wpm} מילים לדקה`:''}</div>`:'';
  if(pass){
-  let stars=ev.acc>=.95?3:ev.acc>=.88?2:1;let pace=null,bonus=0,wpm=0;
-  if(!byParent&&sent&&ev.total>=4&&P.heard.lastT>P.heard.firstT){const dur=(P.heard.lastT-P.heard.firstT)/1000+.7;wpm=Math.round(ev.cnt/(dur/60));
-   k.lastWpm=wpm;pace=wpm<S.settings.paceMin?'slow':wpm>S.settings.paceMax?'fast':'good';if(pace==='good')bonus=Math.ceil(it.pts*.4);}
+  let stars=score>=95?3:score>=85?2:1;let bonus=0;
+  if(pace){k.lastWpm=wpm;if(pace==='good')bonus=Math.ceil(it.pts*.4);}
   let pts=Math.max(1,Math.round(it.pts*stars/3));if(P.mode==='listen')pts=Math.max(1,Math.round(pts*.6));if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));pts+=bonus;
   if(P.attempts===0){if(k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}}
   P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
   P.ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([P.ph]),450);const bigOne=it.type==='sentence'||it.type==='story';(bigOne?SND.big:SND.ok)();confetti(bigOne?140:60);plusPts(pts);
   const pTxt=pace==='good'?`<div style="color:var(--ok);font-weight:700">🎯 קצב מושלם! (+${bonus} בונוס)</div>`:pace==='slow'?`<div class="mut">🐢 קראת נכון! בפעם הבאה ננסה קצת יותר שוטף</div>`:pace==='fast'?`<div class="mut">🐇 מהיר! נסה קצת יותר לאט וברור</div>`:'';
-  $('fb').innerHTML=`<div class="pop"><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div class="big">${esc(P.ph)} 🎉</div>${pTxt}
+  $('fb').innerHTML=`<div class="pop"><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div class="big">${esc(P.ph)} 🎉</div>${scoreHTML}${wrongN?`<div class="mut">⚠️ ${wrongN===1?'מילה אחת באדום צריכה':wrongN+' מילים באדום צריכות'} תיקון – נסה לקרוא אותן שוב</div>`:''}${pTxt}
    ${sent?`<button class="btn ok" style="margin-top:12px" onclick="nextItem()">המשך ➜</button>`:''}</div>`;
   P.done=true;if(!sent)setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2600);
  }else{
   P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();$('read').classList.remove('shake');void $('read').offsetWidth;$('read').classList.add('shake');
   const pct=Math.round(ev.acc*100);const enc=fill(rnd(kidEnc(k)),k);cheerSay([enc]);
-  $('fb').innerHTML=`<div class="pop"><div class="big" style="font-size:21px">${esc(enc)} 💪</div>${sent&&ev.total>1?`<div class="mut">קראת נכון ${pct}% מהמילים – המילים באדום צריכות עוד תרגול</div>`:''}
+  $('fb').innerHTML=`<div class="pop"><div class="big" style="font-size:21px">${esc(enc)} 💪</div>${sent&&ev.total>1?`${scoreHTML}<div class="mut">המילים באדום נקראו לא נכון – מתחת לכל אחת כתוב מה נשמע</div>`:(said[0]?`<div class="mut">נשמע: ${esc(said[0])}</div>`:'')}
    ${P.attempts>=3?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="playItem(cur().text)">🔊 שמע איך קוראים</button><button class="btn sm ghost" onclick="skipItem()">נמשיך הלאה ➜</button></div>`:''}</div>`;}}
 function skipItem(){if(!P)return;stopRec();if(!P.done){P.res[P.idx]=false;const k=kidById(curKid);k.mist=k.mist||{};const key=cur().key;k.mist[key]=(k.mist[key]||0)+1;save();}nextItem();}
 function nextItem(){if(!P)return;P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
