@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#6c4cf1">
+<title>קוראים בכיף – חי אפליקציות</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--pri:#6c4cf1;--pri2:#9b7bff;--ok:#1fb26b;--bad:#ff5d6c;--warn:#ffa41b;--txt:#2d2350;--mut:#8a84a3;--sh:0 6px 22px rgba(80,50,160,.13);--r:22px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:Rubik,system-ui,sans-serif;background:linear-gradient(180deg,#fff7e8 0%,#f1ebff 100%);color:var(--txt);min-height:100vh;overscroll-behavior:none}
+#app{max-width:560px;margin:0 auto;padding:14px 14px 90px}
+button{font-family:inherit;cursor:pointer;border:0}
+input,select,textarea{font-family:inherit;font-size:16px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.brand{font-weight:800;font-size:22px;color:var(--pri)}
+.brand small{display:block;font-size:11px;color:var(--mut);font-weight:500}
+.ibtn{background:#fff;border-radius:16px;padding:10px 14px;font-size:15px;font-weight:600;color:var(--txt);box-shadow:var(--sh)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--pri);color:#fff;border-radius:18px;padding:14px 18px;font-size:17px;font-weight:700;box-shadow:0 6px 0 #4b30c4;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #4b30c4}
+.btn.ok{background:var(--ok);box-shadow:0 6px 0 #138a50}
+.btn.warn{background:var(--warn);box-shadow:0 6px 0 #d6840a}
+.btn.bad{background:var(--bad);box-shadow:0 6px 0 #d63a4a}
+.btn.ghost{background:#fff;color:var(--txt);box-shadow:0 6px 0 #dcd5f3}
+.btn.full{width:100%}
+.btn.sm{padding:9px 12px;font-size:14px;border-radius:14px}
+.card{background:#fff;border-radius:var(--r);padding:16px;box-shadow:var(--sh);margin-bottom:14px}
+.kids{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kid{background:#fff;border-radius:var(--r);padding:16px 10px;text-align:center;box-shadow:var(--sh);position:relative}
+.av{width:92px;height:92px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:52px;background:linear-gradient(135deg,#ffe29a,#ffb3c6);overflow:hidden;border:4px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.av img{width:100%;height:100%;object-fit:cover}
+.av.lg{width:120px;height:120px;font-size:66px}
+.av.sm{width:48px;height:48px;font-size:26px;margin:0;border-width:2px}
+.kname{font-weight:800;font-size:19px}
+.kmeta{font-size:13px;color:var(--mut);margin-top:3px}
+.pts{display:inline-block;background:#fff4d6;color:#b57400;border-radius:12px;padding:3px 10px;font-weight:700;font-size:14px;margin-top:6px}
+.addkid{border:3px dashed #cfc5f5;background:transparent;box-shadow:none;color:var(--pri);font-weight:700;font-size:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;border-radius:var(--r)}
+.hero{text-align:center;padding:6px 0 10px}
+.hero h2{margin:6px 0 2px;font-size:26px}
+.bar{height:16px;background:#ece7fb;border-radius:10px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#ffb020,#ff6fa3);border-radius:10px;transition:width .6s}
+.row{display:flex;gap:10px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.sp{flex:1}
+.mut{color:var(--mut);font-size:14px}
+.world{margin:18px 0 8px;font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
+.lvl{display:flex;align-items:center;gap:12px;background:#fff;border-radius:18px;padding:12px;margin-bottom:10px;box-shadow:var(--sh);width:100%;text-align:right;color:var(--txt)}
+.lvl .num{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:#ece7fb}
+.lvl.done .num{background:#d4f5e4}
+.lvl.cur{outline:3px solid var(--pri);}
+.lvl.cur .num{background:var(--pri);color:#fff;animation:pulse 1.6s infinite}
+.lvl.lock{opacity:.5}
+.lvl .t{font-weight:700;font-size:16px}
+.lvl .d{font-size:13px;color:var(--mut)}
+.dots{display:flex;gap:4px;margin-top:4px}
+.dots b{width:10px;height:10px;border-radius:50%;background:#e2dcf7}
+.dots b.on{background:var(--ok)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(108,76,241,.5)}50%{box-shadow:0 0 0 10px rgba(108,76,241,0)}}
+/* practice */
+.pbar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pdots{display:flex;gap:5px;flex:1;justify-content:center;flex-wrap:wrap}
+.pdots b{width:12px;height:12px;border-radius:50%;background:#e2dcf7}
+.pdots b.ok{background:var(--ok)}.pdots b.no{background:var(--warn)}.pdots b.cur{background:var(--pri);transform:scale(1.25)}
+.read{background:#fff;border-radius:28px;padding:28px 16px;box-shadow:var(--sh);text-align:center;min-height:190px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;line-height:1.7;font-family:'Frank Ruhl Libre',Rubik,serif;font-weight:700;position:relative}
+.read .w{display:inline-block;padding:0 4px;border-radius:10px;transition:background .25s,color .25s}
+.read .w.ok{color:var(--ok);background:#e2f8ec}
+.read .w.miss{color:var(--bad);background:#ffe8ea}
+.read .w.mark{background:#ffe066;color:var(--txt);box-shadow:0 4px 0 #ffb020;transform:scale(1.12)}
+.read .w.past{color:#b8b2cc}
+.read.tele{display:block;text-align:right;max-height:52vh;overflow-y:auto;scroll-behavior:smooth;padding:26px 18px;line-height:2.2}
+.read .w{transition:background .2s,color .2s,transform .2s,box-shadow .2s}
+.heard{min-height:22px;text-align:center;color:var(--mut);font-size:14px;margin:10px 0}
+.micwrap{display:flex;align-items:center;justify-content:center;gap:18px;margin:8px 0 6px}
+.mic{width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,#ff6fa3,#ff9f43);color:#fff;font-size:46px;box-shadow:0 8px 0 #d65a7d,0 10px 25px rgba(255,111,163,.4)}
+.mic:active{transform:translateY(5px);box-shadow:0 3px 0 #d65a7d}
+.mic.on{background:linear-gradient(135deg,#ff3d6e,#ff5d6c);animation:micp 1s infinite}
+@keyframes micp{0%,100%{box-shadow:0 8px 0 #c42a52,0 0 0 0 rgba(255,61,110,.55)}50%{box-shadow:0 8px 0 #c42a52,0 0 0 18px rgba(255,61,110,0)}}
+.side{width:60px;height:60px;border-radius:50%;background:#fff;font-size:26px;box-shadow:var(--sh);color:var(--txt)}
+.side small{display:block;font-size:10px;font-weight:600}
+.fb{text-align:center;min-height:70px;margin-top:6px}
+.fb .big{font-size:26px;font-weight:800}
+.fb .stars{font-size:34px;letter-spacing:4px}
+.pop{animation:pop .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.plusp{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:54px;font-weight:800;color:#ffb020;text-shadow:0 3px 0 #fff,0 6px 18px rgba(0,0,0,.2);pointer-events:none;animation:fly 1.3s forwards;z-index:60}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,-30%) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+.parentrow{display:flex;gap:10px;justify-content:center;margin-top:10px}
+.linkbtn{background:none;color:var(--mut);font-size:13px;text-decoration:underline;padding:6px}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(30,20,60,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal.show{display:flex}
+#modal .box{background:#fff;border-radius:26px;padding:20px;width:100%;max-width:440px;max-height:90vh;overflow:auto;animation:pop .35s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#2d2350;color:#fff;padding:12px 18px;border-radius:16px;font-size:15px;z-index:70;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:55}
+/* settings */
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px}
+.tab{background:#fff;border-radius:14px;padding:9px 13px;font-weight:600;font-size:14px;white-space:nowrap;color:var(--txt);box-shadow:var(--sh)}
+.tab.on{background:var(--pri);color:#fff}
+label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
+.in{width:100%;border:2px solid #e4def7;border-radius:14px;padding:11px 12px;background:#fff;color:var(--txt)}
+.in:focus{outline:none;border-color:var(--pri)}
+.hint{font-size:12px;color:var(--mut);margin-top:4px}
+.li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0ecfb}
+.li:last-child{border:0}
+.x{background:#ffe8ea;color:var(--bad);border-radius:12px;padding:7px 10px;font-weight:700}
+.emo-pick{display:flex;flex-wrap:wrap;gap:6px}
+.emo-pick button{font-size:26px;background:#f5f2ff;border-radius:12px;width:46px;height:46px}
+.emo-pick button.on{background:var(--pri2)}
+.seg{display:flex;background:#f0ecfb;border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;background:none;border-radius:11px;padding:9px 6px;font-weight:600;font-size:14px;color:var(--txt)}
+.seg button.on{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);color:var(--pri)}
+/* wheel */
+.wheelbox{position:relative;width:310px;height:310px;margin:10px auto}
+.wheelbox canvas{width:310px;height:310px;border-radius:50%;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:42px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3));z-index:2}
+.warnbox{background:#fff3d6;border-radius:16px;padding:10px 12px;font-size:13px;margin-bottom:12px;color:#7a5200}
+.tq{background:#fff;border-radius:26px;padding:16px;box-shadow:var(--sh);text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.tqt{font-size:24px;font-weight:700;line-height:1.5}.tqt b{font-family:'Frank Ruhl Libre',serif;color:var(--pri);font-size:32px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.tiles.four{grid-template-columns:1fr 1fr}
+.tile{background:#fff;border-radius:24px;min-height:120px;box-shadow:0 6px 0 #e4ddf7,var(--sh);display:flex;align-items:center;justify-content:center;padding:8px}
+.tile:active{transform:translateY(3px)}
+.tile.right{background:#d4f5e4;box-shadow:0 6px 0 #9fe0bd;animation:pop .45s}.tile.wrong{opacity:.3;animation:shake .4s}
+.dot{display:inline-block;width:74px;height:74px;border-radius:50%;border:3px solid rgba(0,0,0,.1)}
+.shp{width:80px;height:80px}.emo{font-size:60px;line-height:1}.dig{font-size:64px;font-weight:800;color:var(--pri)}
+.let{font-family:'Frank Ruhl Libre',serif;font-size:74px;font-weight:700;color:var(--pri);line-height:1}
+.cntv{font-size:44px;letter-spacing:6px;line-height:1.35;max-width:320px}
+.learn{text-align:center;padding:26px 16px;cursor:pointer}.lvis{transform:scale(1.7);margin:34px 0 30px}.lname{font-family:'Frank Ruhl Libre',serif;font-size:50px;font-weight:700}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"><div class="box" id="mbox"></div></div>
+<div id="toast"></div>
+<canvas id="fx"></canvas>
+<script>
+/* ================= קוראים בכיף – חי אפליקציות ================= */
+const KEY='kriah_v1';
+const LEVELS=[
+ {id:'n1',w:3,emo:'🅰️',title:'קָמָץ וּפַתָּח',desc:'הברות עם תנועת "אָ"',type:'syll',pts:1,n:8,items:['בָּ','מָ','לָ','דָּ','גַּ','נַ','סָ','רַ','תָּ','פָּ','כָּ','שָׁ','הַ','זָ','טַ','יָ']},
+ {id:'n2',w:3,emo:'🅴',title:'חִירִיק, צֵירֵה וְסֶגּוֹל',desc:'הברות עם "אִי" ו"אֶה"',type:'syll',pts:1,n:8,items:['בִּי','מִי','לֵ','דֶּ','נִי','סֵ','רֶ','תִּי','גֵּ','שֶׁ','הִי','כֶּ','פִּי','זֵ']},
+ {id:'n3',w:3,emo:'🅾️',title:'חוֹלָם, שׁוּרוּק וְקֻבּוּץ',desc:'הברות עם "אוֹ" ו"אוּ"',type:'syll',pts:1,n:8,items:['בּוֹ','מוּ','לֹ','דֻּ','נוֹ','סוּ','רֹ','תּוּ','גּוֹ','שׁוּ','כֹּ','פּוּ','זוֹ','חוּ']},
+ {id:'n4',w:3,emo:'🐟',title:'מִלִּים רִאשׁוֹנוֹת',desc:'מילים פשוטות וקצרות',type:'word',pts:2,n:6,items:['אַבָּא','אִמָּא','יָד','דָּג','גַּן','סַל','בַּיִת','כֶּלֶב','חָתוּל','סוּס','דֹּב','פִּיל','שֶׁמֶשׁ','יָם','עֵץ','פֶּרַח','בָּנָנָה','תַּפּוּחַ','כּוֹס','מַיִם']},
+ {id:'n5',w:3,emo:'🦋',title:'מִלִּים עִם שְׁוָא וְדָגֵשׁ',desc:'מילים ארוכות יותר',type:'word',pts:3,n:6,items:['שְׁמָלָה','סְפָרִים','מְכוֹנִית','תְּמוּנָה','מִטְבָּח','שֻׁלְחָן','כִּסֵּא','מַחְבֶּרֶת','יְלָדִים','פַּרְפַּר','צְפַרְדֵּעַ','מִשְׁפָּחָה','גְּלִידָה','עִפָּרוֹן','אוֹפַנַּיִם','מַטְרִיָּה']},
+ {id:'n6',w:3,emo:'✌️',title:'שְׁתֵּי מִלִּים',desc:'צירופים קצרים',type:'phrase',pts:4,n:5,items:['יֶלֶד טוֹב','בַּיִת גָּדוֹל','כֶּלֶב קָטָן','שֶׁמֶשׁ חַמָּה','סֵפֶר חָדָשׁ','גַּן יָפֶה','אַבָּא שֶׁלִּי','יוֹם שָׂמֵחַ','תַּפּוּחַ אָדֹם','פֶּרַח צָהֹב']},
+ {id:'n7',w:3,emo:'🤟',title:'שָׁלוֹשׁ מִלִּים',desc:'משפטונים',type:'phrase',pts:5,n:5,items:['הַיֶּלֶד קוֹרֵא סֵפֶר','אִמָּא אוֹפָה עוּגָה','הַחָתוּל שׁוֹתֶה חָלָב','אֲנִי אוֹהֵב לִקְרֹא','הַכֶּלֶב רָץ מַהֵר','אַבָּא נוֹסֵעַ לָעֲבוֹדָה','הַשֶּׁמֶשׁ זוֹרַחַת בַּבֹּקֶר','דָּנִי מְשַׂחֵק בַּגַּן']},
+ {id:'s1',w:4,emo:'📝',title:'מִשְׁפָּט קָצָר',desc:'קריאה שוטפת של משפט',type:'sentence',pts:8,n:4,items:['הַיּוֹם אֲנִי הוֹלֵךְ לַגַּן עִם אַבָּא.','הַצִּפּוֹר שָׁרָה שִׁיר יָפֶה עַל הָעֵץ.','אֲנִי אוֹכֵל תַּפּוּחַ אָדֹם וּמָתוֹק.','הַיְּלָדִים מְשַׂחֲקִים בַּכַּדּוּר בֶּחָצֵר.','סַבְתָּא אוֹפָה עוּגָה טְעִימָה לְשַׁבָּת.','בַּלַּיְלָה הַיָּרֵחַ מֵאִיר בַּשָּׁמַיִם.','הַכֶּלֶב שֶׁלִּי אוֹהֵב לָרוּץ בַּגִּנָּה.']},
+ {id:'s2',w:4,emo:'📜',title:'מִשְׁפָּט אָרֹךְ',desc:'משפטים ארוכים בקצב נכון',type:'sentence',pts:12,n:3,items:['בְּכָל בֹּקֶר אֲנִי קָם, נוֹטֵל יָדַיִם, אוֹמֵר מוֹדֶה אֲנִי וְהוֹלֵךְ לְבֵית הַסֵּפֶר שָׂמֵחַ.','בַּחֹרֶף יוֹרֵד גֶּשֶׁם חָזָק, וְכָל הַיְּלָדִים לוֹבְשִׁים מְעִילִים וּמַגָּפַיִם.','אַבָּא וְאִמָּא לָקְחוּ אוֹתָנוּ לְטִיּוּל בַּיַּעַר, וְרָאִינוּ שָׁם צְבִי קָטָן וְהַרְבֵּה פְּרָחִים.','בְּשַׁבָּת כָּל הַמִּשְׁפָּחָה יוֹשֶׁבֶת יַחַד סְבִיב הַשֻּׁלְחָן וְשָׁרָה שִׁירִים יָפִים.']},
+ {id:'s3',w:4,emo:'🏆',title:'סִפּוּר שָׁלֵם',desc:'קריאת סיפור מההתחלה עד הסוף',type:'story',pts:25,n:1,items:['גּוּר קָטָן הָלַךְ לְאִבּוּד בַּפַּארְק. הוּא חִפֵּשׂ אֶת אִמָּא שֶׁלּוֹ בְּכָל מָקוֹם. יַלְדָּה טוֹבָה רָאֲתָה אוֹתוֹ וְעָזְרָה לוֹ. בַּסּוֹף הַגּוּר מָצָא אֶת אִמָּא, וְכֻלָּם הָיוּ שְׂמֵחִים.','בַּגִּנָּה שֶׁלָּנוּ שָׁתַלְנוּ עֵץ קָטָן. כָּל יוֹם הִשְׁקֵינוּ אוֹתוֹ בְּמַיִם. הָעֵץ גָּדַל וְגָדַל עַד שֶׁהָיָה גָּבוֹהַּ מִמֶּנִּי. עַכְשָׁו יֵשׁ לוֹ תַּפּוּחִים מְתוּקִים לְכָל הַמִּשְׁפָּחָה.']}
+];
+const col=c=>`<span class="dot" style="background:${c}"></span>`;
+const SV=b=>`<svg viewBox="0 0 100 100" class="shp"><g fill="#7c5cff">${b}</g></svg>`;
+const EM=e=>`<span class="emo">${e}</span>`;const DG=d=>`<span class="dig">${d}</span>`;const LT=l=>`<span class="let">${l}</span>`;
+const mk=(arr,f)=>arr.map(([n,v])=>({name:n,show:f(v)}));
+const NUMN=['אַחַת','שְׁתַּיִם','שָׁלוֹשׁ','אַרְבַּע','חָמֵשׁ','שֵׁשׁ','שֶׁבַע','שְׁמוֹנֶה','תֵּשַׁע','עֶשֶׂר'];
+const CNT_EMO=['🍎','⭐','🐟','🎈','🚗','🌸','🐥','⚽'];
+const EARLY=[
+ {id:'t1',w:1,emo:'🎨',title:'צְבָעִים',desc:'אדום, כחול, צהוב ועוד',type:'tap',pts:1,n:6,items:mk([['אָדֹם','#ff3b3b'],['כָּחֹל','#2f6bff'],['צָהֹב','#ffd60a'],['יָרֹק','#22b45a'],['כָּתֹם','#ff8c1a'],['סָגֹל','#8e44ff'],['וָרֹד','#ff7eb6'],['שָׁחֹר','#222'],['לָבָן','#ffffff'],['חוּם','#8b5a2b']],col)},
+ {id:'t2',w:1,emo:'🔷',title:'צוּרוֹת',desc:'עיגול, משולש, ריבוע...',type:'tap',pts:1,n:6,items:mk([['עִגּוּל','<circle cx="50" cy="50" r="42"/>'],['רִבּוּעַ','<rect x="10" y="10" width="80" height="80" rx="6"/>'],['מְשֻׁלָּשׁ','<polygon points="50,8 94,90 6,90"/>'],['כּוֹכָב','<polygon points="50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38"/>'],['לֵב','<path d="M50 88 C20 65 5 48 5 30 A22 22 0 0 1 50 22 A22 22 0 0 1 95 30 C95 48 80 65 50 88Z"/>'],['מַלְבֵּן','<rect x="4" y="25" width="92" height="50" rx="5"/>'],['מְעֻיָּן','<polygon points="50,4 92,50 50,96 8,50"/>']],SV)},
+ {id:'t3',w:1,emo:'🦁',title:'חַיּוֹת',desc:'כלב, חתול, אריה, פיל...',type:'tap',pts:1,n:6,items:mk([['כֶּלֶב','🐶'],['חָתוּל','🐱'],['אַרְיֵה','🦁'],['פִּיל','🐘'],['סוּס','🐴'],['פָּרָה','🐮'],['תַּרְנְגוֹל','🐓'],['דָּג','🐟'],['צִפּוֹר','🐦'],['קוֹף','🐵'],['דֹּב','🐻'],['אַרְנָב','🐰'],['גִּ׳ירָפָה','🦒'],['צָב','🐢'],['כֶּבֶשׂ','🐑']],EM)},
+ {id:'t4',w:1,emo:'🌙',title:'בַּשָּׁמַיִם',desc:'שמש, ירח, כוכבים...',type:'tap',pts:1,n:6,items:mk([['שֶׁמֶשׁ','☀️'],['יָרֵחַ','🌙'],['כּוֹכָב','⭐'],['עָנָן','☁️'],['קֶשֶׁת','🌈'],['גֶּשֶׁם','🌧️'],['בָּרָק','⚡'],['שֶׁלֶג','❄️']],EM)},
+ {id:'t5',w:1,emo:'🚗',title:'כְּלֵי תַּחְבּוּרָה',desc:'מכונית, רכבת, אונייה...',type:'tap',pts:1,n:6,items:mk([['מְכוֹנִית','🚗'],['אוֹטוֹבּוּס','🚌'],['רַכֶּבֶת','🚂'],['מָטוֹס','✈️'],['אֳנִיָּה','🚢'],['אוֹפַנַּיִם','🚲'],['מַסּוֹק','🚁'],['מַשָּׂאִית','🚚'],['טִיל','🚀'],['אַמְבּוּלַנְס','🚑']],EM)},
+ {id:'t6',w:1,emo:'🍫',title:'אֹכֶל',desc:'תפוח, שוקולד, עוגה...',type:'tap',pts:1,n:6,items:mk([['תַּפּוּחַ','🍎'],['בָּנָנָה','🍌'],['עֲנָבִים','🍇'],['אֲבַטִּיחַ','🍉'],['תּוּת','🍓'],['לֶחֶם','🍞'],['חָלָב','🥛'],['גְּבִינָה','🧀'],['בֵּיצָה','🥚'],['שׁוֹקוֹלָד','🍫'],['עוּגָה','🎂'],['גְּלִידָה','🍦']],EM)},
+ {id:'t7',w:1,emo:'🧸',title:'בַּבַּיִת',desc:'כיסא, מיטה, כדור...',type:'tap',pts:1,n:6,items:mk([['כִּסֵּא','🪑'],['מִטָּה','🛏️'],['דֶּלֶת','🚪'],['מְנוֹרָה','💡'],['דֻּבִּי','🧸'],['כַּדּוּר','⚽'],['שָׁעוֹן','⏰'],['סֵפֶר','📖'],['כּוֹס','🥤'],['נַעֲלַיִם','👟']],EM)},
+ {id:'t8',w:1,emo:'🔢',title:'מִסְפָּרִים',desc:'מכירים את המספרים 1 עד 10',type:'tap',pts:1,n:6,items:NUMN.map((n,i)=>({name:n,show:DG(i+1)}))},
+ {id:'t9',w:1,emo:'🍎',title:'כַּמָּה יֵשׁ?',desc:'סופרים עד 5',type:'tap',pts:2,n:5,items:NUMN.slice(0,5).map((n,i)=>({name:n,show:DG(i+1),say:'כַּמָּה יֵשׁ?',cnt:i+1}))},
+ {id:'a1',w:2,emo:'🔤',title:'אוֹתִיּוֹת א–ח',desc:'אלף, בית, גימל...',type:'tap',pts:2,n:6,opt:4,items:mk([['אָלֶף','א'],['בֵּית','ב'],['גִּימֶל','ג'],['דָּלֶת','ד'],['הֵא','ה'],['וָו','ו'],['זַיִן','ז'],['חֵית','ח']],LT)},
+ {id:'a2',w:2,emo:'🔡',title:'אוֹתִיּוֹת ט–ס',desc:'טית, יוד, כף...',type:'tap',pts:2,n:6,opt:4,items:mk([['טֵית','ט'],['יוֹד','י'],['כַּף','כ'],['לָמֶד','ל'],['מֵם','מ'],['נוּן','נ'],['סָמֶךְ','ס']],LT)},
+ {id:'a3',w:2,emo:'🔠',title:'אוֹתִיּוֹת ע–ת',desc:'עין, פא, צדי...',type:'tap',pts:2,n:6,opt:4,items:mk([['עַיִן','ע'],['פֵּא','פ'],['צָדִי','צ'],['קוֹף','ק'],['רֵישׁ','ר'],['שִׁין','ש'],['תָּו','ת']],LT)},
+ {id:'a4',w:2,emo:'🧐',title:'אוֹתִיּוֹת דּוֹמוֹת',desc:'ב/כ, ד/ר, ה/ח, ו/ז, ג/נ',type:'tap',pts:3,n:8,opt:4,items:mk([['בֵּית','ב'],['כַּף','כ'],['דָּלֶת','ד'],['רֵישׁ','ר'],['הֵא','ה'],['חֵית','ח'],['וָו','ו'],['זַיִן','ז'],['גִּימֶל','ג'],['נוּן','נ']],LT)},
+ {id:'a5',w:2,emo:'🏁',title:'אוֹתִיּוֹת סוֹפִיּוֹת',desc:'ך ם ן ף ץ',type:'tap',pts:3,n:5,opt:4,items:mk([['כַּף סוֹפִית','ך'],['מֵם סוֹפִית','ם'],['נוּן סוֹפִית','ן'],['פֵּא סוֹפִית','ף'],['צָדִי סוֹפִית','ץ']],LT)}
+];
+LEVELS.unshift(...EARLY);
+const WORLDS={1:{name:'עולם הקטנטנים (גיל 3–4)',emo:'🧸'},2:{name:'עולם האותיות (גיל 4–5)',emo:'🔤'},3:{name:'עולם הניקוד (גיל 5–6)',emo:'🎵'},4:{name:'עולם השטף (גיל 7–9)',emo:'📖'}};
+const TYPE={tap:{size:40,sent:false},syll:{size:100,sent:false},word:{size:62,sent:false},phrase:{size:44,sent:true},sentence:{size:34,sent:true},story:{size:30,sent:true}};
+const EMOJIS=['🦁','🐯','🐼','🦊','🐰','🐻','🦄','🐸','🐵','🐱','🐶','🚀','⭐','🌈','⚽','👑'];
+const PRAISE=['כל הכבוד','מעולה','איזה אלוף','וואו','יופי של קריאה','מדהים','נהדר','אלופה/אלוף'];
+const TRY=['כמעט! בוא ננסה שוב 💪','עוד פעם קטנה ותצליח 😊','קרוב מאוד! נסה שוב','לאט ובקול ברור – אתה יכול!'];
+const DEF={
+ praiseM:['כל הכבוד {שם}!','איזה אלוף!','{שם} נסיך עולם!','אין כמוך!!!','אתה קורא מעולה!','וואו, איזה גאון!','מדהים {שם}!','יש! צדקת!'],
+ praiseF:['כל הכבוד {שם}!','איזו אלופה!','{שם} הנסיכה!','אין כמוך!!!','את קוראת מעולה!','וואו, איזו גאונה!','מדהים {שם}!','יש! צדקת!'],
+ encM:['כמעט! רוצה לנסות שוב?','לא נורא, נסה שוב!','כמעט אבל לא, בוא ננסה עוד פעם','אתה יכול! עוד ניסיון אחד','קרוב מאוד {שם}! נסה שוב'],
+ encF:['כמעט! רוצה לנסות שוב?','לא נורא, נסי שוב!','כמעט אבל לא, בואי ננסה עוד פעם','את יכולה! עוד ניסיון אחד','קרוב מאוד {שם}! נסי שוב'],
+ qM:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בוא נראה אם אתה יודע איפה {מה}?','{שם}, תראה לי איפה {מה}!','מי יודע איפה {מה}? אולי {שם}?'],
+ qF:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בואי נראה אם את יודעת איפה {מה}?','{שם}, תראי לי איפה {מה}!','מי יודעת איפה {מה}? אולי {שם}?']};
+const isF=k=>!!k&&k.gender==='f';
+const kidPraise=k=>k.praise&&k.praise.length?k.praise:(isF(k)?DEF.praiseF:DEF.praiseM);
+const kidEnc=k=>k.enc&&k.enc.length?k.enc:(isF(k)?DEF.encF:DEF.encM);
+const qList=k=>{const a=isF(k)?S.settings.qF:S.settings.qM;return a&&a.length?a:(isF(k)?DEF.qF:DEF.qM);};
+const fill=(t,k,what)=>String(t).replace(/\{שם\}/g,k?k.name:'').replace(/\{מה\}/g,what||'');
+const plain=x=>String(x).replace(/[\u0591-\u05C7]/g,'');
+const SPOKEN={'אָדֹם':'אדום','כָּחֹל':'כחול','צָהֹב':'צהוב','יָרֹק':'ירוק','כָּתֹם':'כתום','סָגֹל':'סגול','וָרֹד':'ורוד','שָׁחֹר':'שחור','לָבָן':'לבן','חוּם':'חום',
+ 'עִגּוּל':'עיגול','רִבּוּעַ':'ריבוע','מְשֻׁלָּשׁ':'משולש','מְעֻיָּן':'מעוין','מַלְבֵּן':'מלבן','צִפּוֹר':'ציפור','דֹּב':'דוב','גִּ׳ירָפָה':"ג'ירפה",'כֶּבֶשׂ':'כבש',
+ 'אֳנִיָּה':'אונייה','מַסּוֹק':'מסוק','כִּסֵּא':'כיסא','דֻּבִּי':'דובי','מִטָּה':'מיטה','אֲבַטִּיחַ':'אבטיח','גְּבִינָה':'גבינה','שְׁתַּיִם':'שתיים','אַרְבַּע':'ארבע','תֵּשַׁע':'תשע',
+ 'כַּמָּה יֵשׁ?':'כמה יש?','סָמֶךְ':'סמך','צָדִי':'צדי','וָו':'וו'};
+const sayName=n=>SPOKEN[n]||plain(n);
+function whatPre(L){if(L.id==='t1')return 'הצבע ה';if(L.id==='t8')return 'המספר ';if(L.w===2)return 'האות ';return 'ה';}
+const WCOL=['#ff6b6b','#ffa41b','#ffd93d','#6bcb77','#4d96ff','#9b5de5','#f15bb5','#00bbf9'];
+
+let S=load();
+function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.settings){const d=defState();s.settings=Object.assign(d.settings,s.settings);s.books=s.books||[];if(!s.ver){(s.kids||[]).forEach(k=>k.level=(k.level||0)+EARLY.length);s.ver=2;}return s;}}catch(e){}return defState();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('⚠️ הזיכרון מלא – נסו תמונה קטנה יותר או מחקו ספר');}}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const kidById=id=>S.kids.find(k=>k.id===id);
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2600);}
+function modal(h){$('mbox').innerHTML=h;$('modal').classList.add('show');}
+function closeModal(){$('modal').classList.remove('show');}
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('modal').dataset.lock)closeModal();});
+function avatar(k,cls=''){return `<div class="av ${cls}">${k.photo?`<img src="${k.photo}" alt="">`:esc(k.emoji||'⭐')}</div>`;}
+
+/* ================= התאמת דיבור ================= */
+const NQ=/[֑-ׇ]/g;const FIN={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
+function norm(s){return String(s||'').replace(NQ,'').replace(/[ךםןףץ]/g,c=>FIN[c]).replace(/[^א-ת\s]/g,' ').replace(/\s+/g,' ').trim();}
+function wordsOf(s){const n=norm(s);return n?n.split(' '):[];}
+function skel(w){return w.replace(/[וי]/g,'');}
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+function weq(a,b){if(a===b)return true;const sa=skel(a),sb=skel(b);if(sa.length>=2&&sa===sb)return true;if(sa.length>=4&&sb.length>=4&&lev(sa,sb)<=1)return true;return false;}
+function align(T,Sp){const n=T.length,m=Sp.length;const dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+ for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=weq(T[i],Sp[j])?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+ const ok=new Array(n).fill(false);let i=0,j=0;
+ while(i<n&&j<m){if(weq(T[i],Sp[j])&&dp[i][j]===dp[i+1][j+1]+1){ok[i]=true;i++;j++;}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++;}
+ return ok;}
+function evalItem(text,finals,interim){
+ const toks=text.split(/\s+/).filter(Boolean);const idx=[],T=[];
+ toks.forEach((t,i)=>{const n=norm(t);if(n){idx.push(i);T.push(n.replace(/\s/g,''));}});
+ const inter=interim||'';const cands=[finals.map(a=>a[0]).join(' ')+' '+inter];
+ finals.forEach(a=>a.slice(1).forEach(alt=>cands.push(finals.map(b=>b===a?alt:b[0]).join(' ')+' '+inter)));
+ let best={ok:new Array(T.length).fill(false),cnt:0};
+ cands.slice(0,40).forEach(c=>{const ok=align(T,wordsOf(c));const cnt=ok.filter(Boolean).length;if(cnt>best.cnt)best={ok,cnt};});
+ const okTok=toks.map(t=>!norm(t));idx.forEach((ti,k)=>{if(best.ok[k])okTok[ti]=true;});
+ return{okTok,cnt:best.cnt,total:T.length,acc:T.length?best.cnt/T.length:1};}
+
+/* ================= צלילים ואפקטים ================= */
+let AC;function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();}if(AC.state==='suspended')AC.resume();return AC;}
+function tone(f,t0,d,type='triangle',vol=.16){const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;const t=a.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05);}
+function melody(notes,step=.12,type='triangle',vol=.16){if(!S.settings.sound)return;notes.forEach((n,i)=>{if(n)tone(n,i*step,step*2,type,vol);});}
+const SND={
+ ok:()=>melody([659,784,1047],.09),
+ big:()=>{melody([523,659,784,1047,0,784,1047,1319],.11);melody([262,0,330,0,392,0,523],.11,'sine',.1);},
+ lvl:()=>{melody([392,523,659,784,659,784,1047,0,1047,1175,1319,1568],.13,'square',.08);melody([196,0,262,0,330,0,392,0,523],.17,'triangle',.12);},
+ fail:()=>melody([392,330],.15,'sine',.12),
+ tick:()=>{if(S.settings.sound)tone(1400,0,.03,'square',.05);},
+ tap:()=>{if(S.settings.sound)tone(880,0,.05,'sine',.08);}
+};
+const fx=$('fx'),fctx=fx.getContext('2d');let parts=[],fxRun=false;
+function sizeFx(){fx.width=innerWidth*devicePixelRatio;fx.height=innerHeight*devicePixelRatio;}sizeFx();addEventListener('resize',sizeFx);
+function confetti(n=90,emo){const dpr=devicePixelRatio,W=fx.width,H=fx.height;const em=emo||['⭐','🎉','💖','🌟','🎈'];
+ for(let i=0;i<n;i++){const isE=Math.random()<.25;parts.push({x:W/2+(Math.random()-.5)*W*.3,y:H*.45,vx:(Math.random()-.5)*16*dpr,vy:(-Math.random()*16-6)*dpr,g:.45*dpr,s:(Math.random()*8+6)*dpr,c:rnd(WCOL),r:Math.random()*6,vr:(Math.random()-.5)*.3,e:isE?rnd(em):null,life:0});}
+ if(!fxRun){fxRun=true;requestAnimationFrame(fxLoop);}}
+function fxLoop(){fctx.clearRect(0,0,fx.width,fx.height);parts.forEach(p=>{p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.r+=p.vr;p.life++;fctx.save();fctx.translate(p.x,p.y);fctx.rotate(p.r);if(p.e){fctx.font=(p.s*2.4)+'px serif';fctx.fillText(p.e,0,0);}else{fctx.fillStyle=p.c;fctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);}fctx.restore();});
+ parts=parts.filter(p=>p.y<fx.height+60&&p.life<260);if(parts.length)requestAnimationFrame(fxLoop);else{fxRun=false;fctx.clearRect(0,0,fx.width,fx.height);}}
+function plusPts(n){const d=document.createElement('div');d.className='plusp';d.textContent='+'+n+' ⭐';document.body.appendChild(d);setTimeout(()=>d.remove(),1400);}
+/* --- הקלטות הורים (IndexedDB) --- */
+let DB;function db(){return DB||(DB=new Promise((res,rej)=>{const r=indexedDB.open('kriah_audio',1);r.onupgradeneeded=()=>r.result.createObjectStore('a');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}));}
+async function aGet(k){try{const d=await db();return await new Promise(r=>{const q=d.transaction('a').objectStore('a').get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null);});}catch(e){return null;}}
+async function aSet(k,v){const d=await db();return new Promise(r=>{const t=d.transaction('a','readwrite');if(v)t.objectStore('a').put(v,k);else t.objectStore('a').delete(k);t.oncomplete=()=>r();t.onerror=()=>r();});}
+async function aKeys(){try{const d=await db();return await new Promise(r=>{const q=d.transaction('a').objectStore('a').getAllKeys();q.onsuccess=()=>r(q.result||[]);q.onerror=()=>r([]);});}catch(e){return[];}}
+let curAudio=null,playTok=0;
+function playOne(t,cheer,tok){return new Promise(async res=>{let done=false;const fin=()=>{if(!done){done=true;res();}};
+ const b=await aGet(String(t).trim());if(tok!==playTok)return fin();
+ if(b){curAudio=new Audio(URL.createObjectURL(b));curAudio.onended=fin;curAudio.onerror=fin;curAudio.play().catch(fin);setTimeout(fin,15000);return;}
+ if(!('speechSynthesis'in window))return fin();
+ if(!cheer&&!playOne._w){playOne._w=1;toast('🔈 קול ממוחשב – להגייה מדויקת הקליטו בהגדרות ← הקלטות');}
+ const u=new SpeechSynthesisUtterance(SPOKEN[t]||t);u.lang='he-IL';u.rate=cheer?1.02:.8;u.pitch=cheer?1.3:1;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;
+ u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);setTimeout(fin,Math.max(3000,String(t).length*180));});}
+async function playSeq(list,cheer){const tok=++playTok;try{speechSynthesis.cancel();}catch(e){}if(curAudio){curAudio.pause();curAudio=null;}
+ for(const t of list){if(!t)continue;if(tok!==playTok)return;await playOne(t,cheer,tok);}}
+function playItem(t,cheer){return playSeq([t],cheer);}
+function cheerSay(list){if(S.settings.voice)playSeq(list,true);}
+function speak(t){try{if(!('speechSynthesis'in window))return toast('אין הקראה בדפדפן הזה');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='he-IL';u.rate=.8;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
+
+/* ================= יעד ================= */
+function goalCur(k){return S.settings.goalType==='minutes'?Math.floor((k.goalSec||0)/60):(k.goalPts||0);}
+function goalPct(k){return Math.min(100,Math.round(goalCur(k)/Math.max(1,S.settings.goalTarget)*100));}
+function goalReached(k){return goalCur(k)>=S.settings.goalTarget;}
+function goalLabel(k){const u=S.settings.goalType==='minutes'?'דקות':'נקודות';return `${Math.min(goalCur(k),S.settings.goalTarget)} / ${S.settings.goalTarget} ${u}`;}
+
+/* ================= מסך בית ================= */
+let view='home',curKid=null,P=null,setTab='kids';
+function render(){stopRec();const a=$('app');
+ if(view==='home')a.innerHTML=homeHTML();else if(view==='kid')a.innerHTML=kidHTML();else if(view==='practice'){a.innerHTML=practiceHTML();
+  if(P&&P.learn)setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);
+  else if(P&&cur().type==='tap')setTimeout(()=>{if(view==='practice'&&P&&!P.done)playItem(cur().q,true);},450);
+  else if(P&&P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&!P.listening)playItem(cur().text);},450);}else if(view==='wheel'){a.innerHTML=wheelHTML();drawWheel(0);}else if(view==='settings')a.innerHTML=settingsHTML();
+ window.scrollTo(0,0);}
+function go(v){view=v;render();}
+function homeHTML(){const sr=!!SRC;
+ return `<div class="top"><div class="brand">📚 קוראים בכיף<small>חי אפליקציות</small></div><button class="ibtn" onclick="openSettings()">⚙️ הורים</button></div>
+ ${!window.isSecureContext?`<div class="warnbox">⚠️ <b>הקובץ פתוח ישירות מהטלפון</b> – במצב הזה הדפדפן חוסם את המיקרופון, והמערכת לא יכולה להקשיב. כדי שההקשבה תעבוד צריך להעלות את הקובץ לנטליפיי ולפתוח את הקישור ב-Chrome. בינתיים: הסימון ירוץ בקצב קבוע וההורה מאשר.</div>`:sr?'':`<div class="warnbox">⚠️ הדפדפן הזה לא תומך בזיהוי דיבור. האפליקציה תעבוד במצב "אישור הורה". מומלץ לפתוח ב-Chrome.</div>`}
+ <div class="hero"><div style="font-size:54px">📖✨</div><h2>מי קורא היום?</h2><div class="mut">בחרו ילד והתחילו לקרוא</div></div>
+ <div class="kids">${S.kids.map(k=>`<div class="kid" onclick="openKid('${k.id}')">${avatar(k)}<div class="kname">${esc(k.name)}</div><div class="kmeta">שלב ${k.level+1}: ${esc(LEVELS[Math.min(k.level,LEVELS.length-1)].title)}</div><div class="pts">⭐ ${k.points||0}</div></div>`).join('')}
+ <button class="addkid" onclick="openSettings('kids',true)"><span style="font-size:40px">＋</span>הוספת ילד</button></div>
+ <div class="foot">חי אפליקציות © · קוראים בכיף</div>`;}
+function openKid(id){curKid=id;SND.tap();go('kid');}
+
+/* ================= מסך ילד ================= */
+function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goalReached(k);
+ let html=`<div class="top"><button class="ibtn" onclick="go('home')">➜ חזרה</button><div class="pts" style="font-size:17px">⭐ ${k.points||0}</div></div>
+ <div class="hero">${avatar(k,'lg')}<h2>שלום ${esc(k.name)}! 👋</h2><div class="mut">${rnd(['מוכן לקרוא היום?','בוא נשבור שיא!','כל מילה מקרבת אותך לפרס 🎁'])}</div></div>
+ <div class="card"><div class="row"><b>🎯 היעד שלי</b><span class="sp"></span><span class="mut">${goalLabel(k)}</span></div><div class="bar"><i style="width:${goalPct(k)}%"></i></div>
+ ${gr?`<button class="btn warn full pop" style="margin-top:10px" onclick="go('wheel')">🎡 הגעת ליעד! סובב את גלגל המזל</button>`:`<div class="mut">כשמגיעים ליעד – מסובבים את גלגל המזל 🎡</div>`}</div>
+ <div class="seg" style="margin-bottom:12px"><button class="${k.mode!=='listen'?'on':''}" onclick="setMode('read')">📖 אני קורא לבד</button><button class="${k.mode==='listen'?'on':''}" onclick="setMode('listen')">👂 שומע וחוזר</button></div>
+ <button class="btn ok full" style="font-size:20px;padding:18px" onclick="startLevel(${Math.min(k.level,LEVELS.length-1)})">▶️ התחל לקרוא</button>
+ ${S.books.length?`<button class="btn ghost full" style="margin-top:14px" onclick="chooseBook()">📚 לקרוא מהספרים שלי</button>`:''}`;
+ let w=0;LEVELS.forEach((L,i)=>{if(L.w!==w){w=L.w;html+=`<div class="world">${WORLDS[w].emo} ${WORLDS[w].name}</div>`;}
+  const st=i<k.level?'done':i===k.level?'cur':'lock';
+  html+=`<button class="lvl ${st}" ${st==='lock'?'disabled':''} onclick="startLevel(${i})"><div class="num">${st==='done'?'✅':st==='lock'?'🔒':L.emo}</div><div class="sp"><div class="t">שלב ${i+1} · ${esc(L.title)}</div><div class="d">${esc(L.desc)}</div>
+  ${st==='cur'?`<div class="dots">${Array.from({length:S.settings.sessionsToPass},(_,j)=>`<b class="${j<(k.streak||0)?'on':''}"></b>`).join('')}</div>`:''}</div></button>`;});
+ if(k.level>=LEVELS.length)html+=`<div class="card" style="text-align:center"><div style="font-size:50px">🏆</div><b>סיימת את כל השלבים! אלוף אמיתי!</b></div>`;
+ return html;}
+
+/* ================= אימון ================= */
+function setMode(m){const k=kidById(curKid);k.mode=m;save();SND.tap();render();}
+function lengthN(n){return Math.max(1,Math.round(n*S.settings.length));}
+const nameOf=x=>typeof x==='string'?x:x.name;
+function startLevel(i){const k=kidById(curKid);const L=LEVELS[i];if(!L)return;const names=L.items.map(nameOf);
+ const pre=L.id+'|';const mist=Object.keys(k.mist||{}).filter(x=>x.startsWith(pre)).map(x=>x.slice(pre.length)).filter(t=>names.includes(t));
+ const n=Math.min(lengthN(L.n),names.length);const pick=shuffle(mist).slice(0,Math.ceil(n/2));
+ shuffle(names).forEach(t=>{if(pick.length<n&&!pick.includes(t))pick.push(t);});
+ const learn=L.type==='tap'&&!(k.history||[]).some(h=>h.lid===L.id);
+ beginSession({lvl:i,learn,li:0,learnItems:L.items.slice(0,12),items:shuffle(pick).map(t=>mkItem(L,t,pre))});}
+function mkItem(L,t,pre){if(L.type!=='tap')return{key:pre+t,text:t,type:L.type,pts:L.pts};
+ const o=L.items.find(x=>x.name===t);const others=shuffle(L.items.filter(x=>x.name!==t&&x.show!==o.show)).slice(0,(L.opt||3)-1);
+ const it={key:pre+t,text:t,type:'tap',pts:L.pts,o,opts:shuffle([o,...others]),say:o.say||t};
+ if(o.cnt)it.pv=`<div class="cntv">${rnd(CNT_EMO).repeat(o.cnt)}</div>`;return it;}
+function chooseBook(){modal(`<h3 style="margin-top:0">📚 הספרים שלי</h3>${S.books.map(b=>`<div class="card" style="box-shadow:none;border:2px solid #eee"><b>${esc(b.name)}</b><div class="mut">${b.words.length} מילים · ${b.sentences.length} משפטים</div><div class="row wrap" style="margin-top:8px">
+ <button class="btn sm" onclick="startBook('${b.id}','word')">מילים</button><button class="btn sm" onclick="startBook('${b.id}','sentence')">משפטים</button><button class="btn sm warn" onclick="startBook('${b.id}','story')">קטעים</button></div></div>`).join('')}<button class="btn ghost full" onclick="closeModal()">סגור</button>`);}
+function startBook(id,unit){closeModal();const b=S.books.find(x=>x.id===id);if(!b)return;let src,pts,n;
+ if(unit==='word'){src=b.words;pts=2;n=lengthN(8);}else if(unit==='sentence'){src=b.sentences;pts=6;n=lengthN(4);}else{src=[];for(let i=0;i<b.sentences.length;i+=3)src.push(b.sentences.slice(i,i+3).join(' '));pts=18;n=1;}
+ if(!src.length)return toast('אין תוכן בספר הזה');
+ const start=unit==='story'?Math.floor(Math.random()*src.length):0;
+ const pick=unit==='story'?[src[start]]:shuffle(src).slice(0,n);
+ beginSession({book:b.name,items:pick.map(t=>({key:'b'+id+'|'+t,text:t,type:unit,pts}))});}
+function beginSession(o){const kk=kidById(curKid);P=Object.assign({mode:kk.mode==='listen'?'listen':'read',idx:0,res:[],earned:0,start:Date.now(),attempts:0,listening:false,done:false},o);ac();go('practice');}
+function cur(){return P.items[P.idx];}
+const CAN_LISTEN=()=>!!SRC&&window.isSecureContext;
+function isParentMode(it){return it.type==='syll'||S.settings.verify==='parent'||!CAN_LISTEN()||(P&&P.micDenied);}
+function pbarHTML(list,pos,isLearn){const k=kidById(curKid);return `<div class="pbar"><button class="ibtn" onclick="quitSession()">✕</button><div class="pdots">${list.map((_,i)=>`<b class="${i<pos?(isLearn||P.res[i]?'ok':'no'):i===pos?'cur':''}"></b>`).join('')}</div>${avatar(k,'sm')}</div>`;}
+function learnHTML(){const L=LEVELS[P.lvl];const o=P.learnItems[P.li];const vis=(o.cnt?`<div class="cntv">${'🍎'.repeat(o.cnt)}</div>`:'')+o.show;
+ return pbarHTML(P.learnItems,P.li,true)+`<div class="mut" style="text-align:center;margin-bottom:8px">🃏 בוא נכיר · ${esc(L.title)}</div>
+ <div class="card learn" onclick="playItem(P.learnItems[P.li].name)"><div class="lvis">${vis}</div><div class="lname">${esc(o.name)}</div></div>
+ <div class="row"><button class="btn ghost sp" onclick="playItem(P.learnItems[P.li].name)">🔊 שוב</button><button class="btn ok sp" onclick="learnNext()">${P.li<P.learnItems.length-1?'הבא ➜':'🎮 בוא נשחק!'}</button></div>`;}
+function learnNext(){SND.tap();P.li++;if(P.li>=P.learnItems.length){P.learn=false;P.start=Date.now();}render();}
+function buildQ(it){const k=kidById(curKid);const L=LEVELS[P.lvl];const n=P.qn=(P.qn||0)+1;let tpl;
+ if(it.o.cnt)tpl=n===1?(isF(k)?'בואי נספור, {שם}! כמה יש?':'בוא נספור, {שם}! כמה יש?'):rnd(['ועכשיו, כמה יש?','{שם}, כמה יש פה?','בוא נספור שוב, כמה יש?']);
+ else{const qs=qList(k);tpl=n===1||qs.length<2?qs[0]:rnd(qs.slice(1));}
+ const pre=whatPre(L);it.q=fill(tpl,k,pre+sayName(it.o.name));it.short=it.o.cnt?'כמה יש?':'איפה '+pre+sayName(it.o.name)+'?';
+ it.qHTML=esc(fill(tpl,k,'§')).replace('§',esc(pre)+'<b>'+esc(it.o.name)+'</b>');}
+function tapHTML(){const it=cur();if(!it.q)buildQ(it);
+ return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(LEVELS[P.lvl].title)}</div>
+ <div class="tq">${it.pv||''}<div class="tqt">${it.qHTML}</div><button class="side" onclick="playItem(cur().q,true)">🔊</button></div>
+ <div class="tiles ${it.opts.length>3?'four':''}">${it.opts.map((o,i)=>`<button class="tile" id="tile${i}" onclick="tapPick(${i})">${o.show}</button>`).join('')}</div><div class="fb" id="fb"></div>`;}
+function tapPick(i){if(!P||P.done)return;const it=cur();const k=kidById(curKid);const el=$('tile'+i);k.mist=k.mist||{};
+ if(it.opts[i]===it.o){P.done=true;el.classList.add('right');let pts=it.pts;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));
+  if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
+  P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
+  SND.ok();confetti(50);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),400);
+  $('fb').innerHTML=`<div class="pop big" style="font-size:26px;font-weight:800">${esc(ph)} 🎉</div>`;
+  setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2700);}
+ else{P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();el.classList.add('wrong');el.disabled=true;
+  const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:21px;font-weight:700">${esc(e)} 💪</div>`;setTimeout(()=>cheerSay([e,it.short]),450);}}
+function practiceHTML(){if(P.learn)return learnHTML();if(cur().type==='tap')return tapHTML();const k=kidById(curKid);const it=cur();const T=TYPE[it.type];const pm=isParentMode(it);
+ const title=P.book?('📚 '+esc(P.book)):('שלב '+(P.lvl+1)+' · '+esc(LEVELS[P.lvl].title));
+ return `<div class="pbar"><button class="ibtn" onclick="quitSession()">✕</button><div class="pdots">${P.items.map((_,i)=>`<b class="${i<P.idx?(P.res[i]?'ok':'no'):i===P.idx?'cur':''}"></b>`).join('')}</div>${avatar(k,'sm')}</div>
+ <div class="mut" style="text-align:center;margin-bottom:8px">${title}${P.mode==='listen'?' · <b style="color:var(--pri)">👂 הקשב וחזור אחריי</b>':''}</div>
+ <div class="read${it.type==='sentence'||it.type==='story'?' tele':''}" id="read" style="font-size:${T.size}px">${it.text.split(/\s+/).filter(Boolean).map((w,i)=>`<span class="w" data-i="${i}">${esc(w)}</span>`).join(' ')}</div>
+ <div class="heard" id="heard">${pm&&it.type==='syll'?'קרא בקול – ההורה יאשר 👂':'לחץ על המיקרופון וקרא בקול 🎤'}</div>
+ <div class="micwrap"><button class="side" onclick="playItem(cur().text)">🔊<small>שמע</small></button>
+ <button class="mic" id="mic" onclick="micTap()">🎤</button>
+ <button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
+ ${pm?`<div class="parentrow" id="pbtns"><button class="btn ok" onclick="parentJudge(true)">✅ קרא נכון</button><button class="btn warn" onclick="parentJudge(false)">🔁 עוד פעם</button></div>`:`<div style="text-align:center"><button class="linkbtn" onclick="parentJudge(true)">👨 אישור הורה (אם המערכת לא שמעה טוב)</button></div>`}
+ <div class="fb" id="fb"></div>`;}
+function quitSession(){stopRec();if(P&&P.idx>0&&!P.done){if(!confirm('לצאת מהאימון? הנקודות שנצברו יישמרו.'))return;finishSession(true);return;}go('kid');}
+
+/* --- זיהוי דיבור --- */
+const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;
+let REC=null;
+function stopRec(){if(P){P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);}if(REC){const r=REC;REC=null;try{r.abort();}catch(e){}}}
+function micTap(){if(!P||P.done)return;if(P.listening){finishListening();return;}
+ const it=cur();const sent=TYPE[it.type].sent;const noRec=!CAN_LISTEN()||P.micDenied;
+ if(noRec&&!sent){toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתורים');return;}
+ P.listening=true;P.userStop=false;P.noRec=noRec;P.heard={finals:[],interim:'',firstT:0,lastT:0};P.base=[];
+ $('mic').classList.add('on');$('mic').textContent='⏹';$('heard').textContent='🎧 מקשיב...';$('fb').innerHTML='';
+ document.querySelectorAll('#read .w').forEach(e=>e.className='w');
+ P.conf=-1;P.confT=0;P.okTok=[];P.markPos=-1;const kk=kidById(curKid);P.rate=Math.min(4,Math.max(.4,(kk.lastWpm||60)/60));
+ P.guideRate=(S.settings.guideWpm||kk.lastWpm||50)/60;clearInterval(P.tick);if(sent)P.tick=setInterval(markTick,80);
+ if(noRec){P.heard.firstT=performance.now();$('heard').textContent='🚦 קרא יחד עם הסימון הצהוב';if(!P.parentShown)showParentBtns();markTick();return;}
+ runRec(sent);const nw=it.text.split(/\s+/).length;
+ P.maxT=setTimeout(()=>{if(P&&P.listening)finishListening();},sent?Math.max(15000,nw*1800):9000);}
+function runRec(sent){const r=new SRC();r.lang='he-IL';r.interimResults=true;r.maxAlternatives=5;r.continuous=sent;REC=r;const map=[];
+ r.onresult=e=>{if(REC!==r||!P)return;const now=performance.now();if(!P.heard.firstT)P.heard.firstT=now;P.heard.lastT=now;let inter='';
+  for(let i=0;i<e.results.length;i++){const res=e.results[i];if(res.isFinal)map[i]=Array.from(res).map(a=>a.transcript);else inter+=res[0].transcript+' ';}
+  P.heard.finals=P.base.concat(map.filter(Boolean));P.heard.interim=inter;onHeard();};
+ r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){P.micDenied=true;switchNoRec(window.isSecureContext?'🎤 צריך לאשר גישה למיקרופון בהגדרות הדפדפן':'🎤 המיקרופון חסום כשהקובץ פתוח מהטלפון – העלו לנטליפיי');}else if(e.error==='network'){P.micDenied=true;toast('📶 זיהוי הדיבור צריך חיבור לאינטרנט');}};
+ r.onend=()=>{if(REC!==r||!P||P.noRec)return;if(P.listening&&!P.userStop&&sent&&!P.micDenied){P.base=P.heard.finals.slice();try{runRec(true);}catch(e){finishListening();}}else if(P.listening)finishListening();};
+ try{r.start();}catch(e){toast('לא הצלחתי להפעיל מיקרופון');finishListening();}}
+function onHeard(){const it=cur();const h=P.heard;const ev=evalItem(it.text,h.finals,h.interim);
+ const said=(h.finals.map(a=>a[0]).join(' ')+' '+h.interim).trim();$('heard').textContent='🎧 '+(said||'מקשיב...');
+ let last=-1;ev.okTok.forEach((o,i)=>{if(o)last=i;});P.okTok=ev.okTok;
+ if(last>P.conf){const now=performance.now();if(h.firstT){const r=(last+1)/((now-h.firstT)/1000+.6);P.rate=Math.min(4,Math.max(.4,P.rate*.5+r*.5));}P.conf=last;P.confT=now;}
+ if(TYPE[it.type].sent){P.markPos=-2;markTick();}else document.querySelectorAll('#read .w').forEach((e,i)=>{e.className='w'+(ev.okTok[i]?' ok':'');});
+ if(ev.cnt===ev.total&&ev.total>0)finishListening();}
+function showParentBtns(){P.parentShown=true;const fb=$('fb');if(!fb)return;if(document.getElementById('pbtns'))return;
+ fb.insertAdjacentHTML('beforebegin',`<div class="parentrow" id="pbtns"><button class="btn ok" onclick="parentJudge(true)">✅ קרא נכון</button><button class="btn warn" onclick="parentJudge(false)">🔁 עוד פעם</button></div>`);}
+function switchNoRec(msg){toast(msg);if(!P)return;REC=null;const it=cur();if(!TYPE[it.type].sent){finishListening();showParentBtns();return;}
+ P.noRec=true;clearTimeout(P.maxT);if(!P.heard.firstT)P.heard.firstT=performance.now();$('heard').textContent='🚦 קרא יחד עם הסימון הצהוב';showParentBtns();}
+function markTick(){if(!P||!P.listening)return;const spans=document.querySelectorAll('#read .w');const n=spans.length;if(!n)return;const now=performance.now();const guide=S.settings.markMode==='guide'||P.noRec;let pos;
+ if(guide){pos=P.heard.firstT?Math.floor((now-P.heard.firstT)/1000*P.guideRate):0;}
+ else{const base=P.conf+1;pos=P.confT?Math.min(base+2,base+Math.floor((now-P.confT)/1000*P.rate*.85)):base;}
+ if(P.noRec&&pos>=n+1){P.listening=false;clearInterval(P.tick);const m=$('mic');if(m){m.classList.remove('on');m.textContent='🎤';}spans.forEach(e=>e.className='w');$('heard').textContent='👂 ההורה מאשר: קרא נכון?';return;}
+ pos=Math.min(pos,n-1);const changed=pos!==P.markPos;P.markPos=pos;
+ spans.forEach((e,i)=>{const ok=P.okTok[i];e.className='w'+(ok?' ok':(guide&&i<pos?' past':''))+(i===pos?' mark':'');});
+ if(changed){const box=$('read'),el=spans[pos];if(box&&el&&box.scrollHeight>box.clientHeight)box.scrollTop=Math.max(0,el.offsetTop-box.clientHeight/3);}}
+function finishListening(){if(!P||!P.listening)return;P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);
+ if(REC){const r=REC;REC=null;try{r.stop();}catch(e){}}
+ const m=$('mic');if(m){m.classList.remove('on');m.textContent='🎤';}
+ if(P.noRec){$('heard').textContent='👂 ההורה מאשר: קרא נכון?';return;}
+ const h=P.heard;if(!h.finals.length&&!h.interim.trim()){if(!P.micDenied){$('heard').textContent='🙉 לא שמעתי. לחץ על המיקרופון וקרא בקול רם';}return;}
+ judge(evalItem(cur().text,h.finals,h.interim),false);}
+function parentJudge(ok){if(!P||P.done)return;stopRec();const m=$('mic');if(m){m.classList.remove('on');m.textContent='🎤';}
+ const toks=cur().text.split(/\s+/).filter(Boolean);
+ if(ok)judge({okTok:toks.map(()=>true),cnt:toks.length,total:toks.length,acc:1},true);
+ else judge({okTok:toks.map(()=>false),cnt:0,total:toks.length,acc:0},true);}
+function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TYPE[it.type].sent;
+ const need=it.type==='sentence'||it.type==='story'?.8:1;const pass=ev.acc>=need;
+ document.querySelectorAll('#read .w').forEach((e,i)=>{e.className='w '+(ev.okTok[i]?'ok':'miss');});
+ k.mist=k.mist||{};
+ if(pass){
+  let stars=ev.acc>=.95?3:ev.acc>=.88?2:1;let pace=null,bonus=0,wpm=0;
+  if(!byParent&&sent&&ev.total>=4&&P.heard.lastT>P.heard.firstT){const dur=(P.heard.lastT-P.heard.firstT)/1000+.7;wpm=Math.round(ev.cnt/(dur/60));
+   k.lastWpm=wpm;pace=wpm<S.settings.paceMin?'slow':wpm>S.settings.paceMax?'fast':'good';if(pace==='good')bonus=Math.ceil(it.pts*.4);}
+  let pts=Math.max(1,Math.round(it.pts*stars/3));if(P.mode==='listen')pts=Math.max(1,Math.round(pts*.6));if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));pts+=bonus;
+  if(P.attempts===0){if(k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}}
+  P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
+  P.ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([P.ph]),450);const bigOne=it.type==='sentence'||it.type==='story';(bigOne?SND.big:SND.ok)();confetti(bigOne?140:60);plusPts(pts);
+  const pTxt=pace==='good'?`<div style="color:var(--ok);font-weight:700">🎯 קצב מושלם! (+${bonus} בונוס)</div>`:pace==='slow'?`<div class="mut">🐢 קראת נכון! בפעם הבאה ננסה קצת יותר שוטף</div>`:pace==='fast'?`<div class="mut">🐇 מהיר! נסה קצת יותר לאט וברור</div>`:'';
+  $('fb').innerHTML=`<div class="pop"><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div class="big">${esc(P.ph)} 🎉</div>${pTxt}
+   ${sent?`<button class="btn ok" style="margin-top:12px" onclick="nextItem()">המשך ➜</button>`:''}</div>`;
+  P.done=true;if(!sent)setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2600);
+ }else{
+  P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();$('read').classList.remove('shake');void $('read').offsetWidth;$('read').classList.add('shake');
+  const pct=Math.round(ev.acc*100);const enc=fill(rnd(kidEnc(k)),k);cheerSay([enc]);
+  $('fb').innerHTML=`<div class="pop"><div class="big" style="font-size:21px">${esc(enc)} 💪</div>${sent&&ev.total>1?`<div class="mut">קראת נכון ${pct}% מהמילים – המילים באדום צריכות עוד תרגול</div>`:''}
+   ${P.attempts>=3?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="playItem(cur().text)">🔊 שמע איך קוראים</button><button class="btn sm ghost" onclick="skipItem()">נמשיך הלאה ➜</button></div>`:''}</div>`;}}
+function skipItem(){if(!P)return;stopRec();if(!P.done){P.res[P.idx]=false;const k=kidById(curKid);k.mist=k.mist||{};const key=cur().key;k.mist[key]=(k.mist[key]||0)+1;save();}nextItem();}
+function nextItem(){if(!P)return;P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
+function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.round((Date.now()-P.start)/1000);
+ k.goalSec=(k.goalSec||0)+sec;k.totalSec=(k.totalSec||0)+sec;
+ const n=P.res.length||1;const good=P.res.filter(Boolean).length;const acc=good/Math.max(1,P.items.length);
+ let lvlMsg='',leveled=false;
+ if(!early&&P.lvl!==undefined&&P.lvl===k.level){
+  if(acc*100>=S.settings.threshold){k.streak=(k.streak||0)+1;
+   if(k.streak>=S.settings.sessionsToPass){k.level++;k.streak=0;leveled=true;}
+   else lvlMsg=`💪 אימון מצוין! עוד ${S.settings.sessionsToPass-k.streak} אימונים כאלה ועולים שלב`;}
+  else{k.streak=0;lvlMsg='🌱 ממשיכים להתאמן בשלב הזה – כל אימון מחזק!';}}
+ k.history=(k.history||[]).slice(-60);k.history.push({d:Date.now(),lvl:P.lvl,lid:P.lvl!==undefined?LEVELS[P.lvl].id:null,book:P.book||null,acc:Math.round(acc*100),pts:P.earned,sec});save();
+ const earned=P.earned;const lvlDone=P.lvl;P=null;
+ if(early){go('kid');return;}
+ const emoji=acc>=.9?'🏆':acc>=.7?'🌟':'👍';
+ if(leveled){SND.lvl();confetti(220,['🏆','⭐','👑','🎉','🚀']);}else{SND.big();confetti(120);}
+ const gr=goalReached(k);
+ $('app').innerHTML=`<div class="hero pop" style="padding-top:24px"><div style="font-size:80px">${leveled?'🚀':emoji}</div>${avatar(k,'lg')}<h2>${leveled?'עלית שלב!!! 🎉':'סיימת את האימון!'}</h2></div>
+ <div class="card" style="text-align:center"><div style="font-size:20px;font-weight:800">${good} מתוך ${P===null?n:n} נכון בפעם הראשונה</div><div class="pts" style="font-size:22px;margin-top:10px">+${earned} ⭐</div>
+ ${leveled?`<div style="margin-top:12px;font-size:18px;font-weight:700;color:var(--pri)">ברוך הבא לשלב ${k.level+1}${k.level<LEVELS.length?': '+esc(LEVELS[k.level].title):''}</div>`:lvlMsg?`<div style="margin-top:12px">${lvlMsg}</div>`:''}</div>
+ <div class="card"><div class="row"><b>🎯 היעד</b><span class="sp"></span><span class="mut">${goalLabel(k)}</span></div><div class="bar"><i style="width:${goalPct(k)}%"></i></div></div>
+ ${gr?`<button class="btn warn full pop" style="font-size:20px;padding:18px;margin-bottom:14px" onclick="go('wheel')">🎡 סובב את גלגל המזל!</button>`:''}
+ <div class="row"><button class="btn ok sp" onclick="${lvlDone!==undefined?`startLevel(${Math.min(k.level,LEVELS.length-1)})`:'chooseBook()'}">▶️ עוד אימון</button><button class="btn ghost sp" onclick="go('kid')">חזרה</button></div>`;
+ if(gr)setTimeout(()=>{SND.big();},900);}
+
+/* ================= גלגל המזל ================= */
+let wAng=0,spinning=false;
+function wheelHTML(){const k=kidById(curKid);const gr=goalReached(k);
+ return `<div class="top"><button class="ibtn" onclick="go('kid')">➜ חזרה</button>${avatar(k,'sm')}</div>
+ <div class="hero"><h2>🎡 גלגל המזל של ${esc(k.name)}</h2><div class="mut">${gr?'לחץ על "סובב" וגלה מה זכית!':'עוד לא הגעת ליעד – המשך לקרוא! 📖'}</div></div>
+ <div class="wheelbox"><div class="pointer">🔻</div><canvas id="wheel" width="620" height="620"></canvas></div>
+ <button class="btn warn full" style="font-size:22px;padding:18px" id="spinBtn" ${gr?'':'disabled style="opacity:.5"'} onclick="spin()">🎰 סובב!</button>
+ ${(k.prizes||[]).length?`<div class="card" style="margin-top:16px"><b>🎁 הפרסים שזכיתי בהם</b>${k.prizes.slice(-8).reverse().map(p=>`<div class="li"><span>${esc(p.t)}</span><span class="sp"></span><span class="mut">${new Date(p.d).toLocaleDateString('he-IL')}</span></div>`).join('')}</div>`:''}`;}
+function drawWheel(a){const c=$('wheel');if(!c)return;const x=c.getContext('2d');const P2=S.settings.prizes.length?S.settings.prizes:['🎁 הפתעה'];const n=P2.length,R=310,seg=Math.PI*2/n;
+ x.clearRect(0,0,620,620);x.save();x.translate(310,310);x.rotate(a);
+ for(let i=0;i<n;i++){x.beginPath();x.moveTo(0,0);x.arc(0,0,R,i*seg,(i+1)*seg);x.closePath();x.fillStyle=WCOL[i%WCOL.length];x.fill();x.strokeStyle='#fff';x.lineWidth=4;x.stroke();
+  x.save();x.rotate(i*seg+seg/2);x.textAlign='right';x.textBaseline='middle';x.fillStyle='#fff';x.font='bold '+(n>8?24:30)+'px Rubik,sans-serif';x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=4;
+  let t=P2[i];if(t.length>14)t=t.slice(0,13)+'…';x.fillText(t,R-20,0);x.restore();}
+ x.beginPath();x.arc(0,0,44,0,Math.PI*2);x.fillStyle='#fff';x.fill();x.font='44px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('⭐',0,3);x.restore();}
+function spin(){const k=kidById(curKid);if(spinning||!goalReached(k))return;spinning=true;ac();$('spinBtn').disabled=true;
+ const pr=S.settings.prizes.length?S.settings.prizes:['🎁 הפתעה'];const n=pr.length,seg=Math.PI*2/n;const win=Math.floor(Math.random()*n);
+ // pointer at top (-PI/2). segment center = win*seg+seg/2 ; need a+center = -PI/2 (mod 2PI)
+ let target=-Math.PI/2-(win*seg+seg/2)+(Math.random()-.5)*seg*.6;const base=wAng%(Math.PI*2);let delta=target-base;while(delta<0)delta+=Math.PI*2;delta+=Math.PI*2*6;
+ const from=wAng,dur=4600,t0=performance.now();let lastSeg=-1;
+ function step(t){const p=Math.min(1,(t-t0)/dur);const e=1-Math.pow(1-p,4);wAng=from+delta*e;drawWheel(wAng);
+  const s=Math.floor((((-Math.PI/2-wAng)%(Math.PI*2))+Math.PI*4)%(Math.PI*2)/seg);if(s!==lastSeg){lastSeg=s;SND.tick();}
+  if(p<1)requestAnimationFrame(step);else{spinning=false;won(pr[win]);}}
+ requestAnimationFrame(step);}
+function won(prize){const k=kidById(curKid);k.prizes=k.prizes||[];k.prizes.push({t:prize,d:Date.now()});
+ if(S.settings.goalType==='minutes')k.goalSec=Math.max(0,(k.goalSec||0)-S.settings.goalTarget*60);else k.goalPts=Math.max(0,(k.goalPts||0)-S.settings.goalTarget);
+ save();SND.lvl();confetti(240,['🎁','🎉','⭐','🍭','🏆']);
+ $('modal').dataset.lock='1';
+ modal(`<div style="text-align:center">${avatar(k,'lg')}<div style="font-size:24px;font-weight:800;margin:10px 0">🎉 זכית! 🎉</div><div style="font-size:32px;font-weight:800;color:var(--pri);margin:14px 0">${esc(prize)}</div><div class="mut">ההורים יעזרו לך לממש את הפרס</div><button class="btn ok full" style="margin-top:16px" onclick="delete $('modal').dataset.lock;closeModal();go('kid')">יש!!! 🥳</button></div>`);}
+
+/* ================= הגדרות הורים ================= */
+function openSettings(tab,addKid){modal(`<h3 style="margin-top:0">🔒 כניסת הורים</h3><div class="mut">הקלידו את קוד ההורים${S.pin==='1234'?' (קוד התחלתי: 1234)':''}</div>
+ <input class="in" id="pinIn" type="password" inputmode="numeric" style="margin:12px 0;font-size:24px;text-align:center;letter-spacing:8px" onkeydown="if(event.key==='Enter')checkPin('${tab||''}',${!!addKid})">
+ <button class="btn full" onclick="checkPin('${tab||''}',${!!addKid})">כניסה</button>`);setTimeout(()=>$('pinIn')&&$('pinIn').focus(),100);}
+function checkPin(tab,addKid){if($('pinIn').value!==S.pin){$('pinIn').classList.add('shake');toast('קוד שגוי');return;}closeModal();if(tab)setTab=tab;go('settings');if(addKid)editKid(null);}
+function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 יעד ופרסים'],['read','🎤 קריאה'],['books','📚 ספרים'],['voice','🗣️ דיבור ועידוד'],['rec','🎙️ הקלטות'],['more','💾 עוד']];
+ let h=`<div class="top"><button class="ibtn" onclick="go('home')">➜ סיום</button><div class="brand" style="font-size:19px">⚙️ הגדרות הורים</div></div>
+ <div class="tabs">${tabs.map(t=>`<button class="tab ${setTab===t[0]?'on':''}" onclick="setTab='${t[0]}';render()">${t[1]}</button>`).join('')}</div>`;
+ const s=S.settings;
+ if(setTab==='kids'){h+=`<div class="card">${S.kids.length?S.kids.map(k=>`<div class="li">${avatar(k,'sm')}<div class="sp"><b>${esc(k.name)}</b><div class="mut">שלב ${k.level+1} · ⭐ ${k.points||0} · ${Math.round((k.totalSec||0)/60)} דק' קריאה</div></div><button class="btn sm ghost" onclick="editKid('${k.id}')">✏️ עריכה</button></div>`).join(''):'<div class="mut">עדיין אין ילדים</div>'}</div>
+  <button class="btn full" onclick="editKid(null)">＋ הוספת ילד</button>`;}
+ else if(setTab==='goal'){h+=`<div class="card"><label class="f">סוג היעד</label><div class="seg"><button class="${s.goalType==='points'?'on':''}" onclick="setS('goalType','points')">⭐ נקודות</button><button class="${s.goalType==='minutes'?'on':''}" onclick="setS('goalType','minutes')">⏱️ דקות קריאה</button></div>
+  <label class="f">כמה ${s.goalType==='minutes'?'דקות':'נקודות'} צריך כדי לסובב את הגלגל?</label><input class="in" type="number" min="1" value="${s.goalTarget}" onchange="setS('goalTarget',Math.max(1,+this.value||1))"></div>
+  <div class="card"><b>🎡 הפרסים בגלגל</b><div class="hint">כל דבר שתרצו – אפשר עם אימוג'י</div>${s.prizes.map((p,i)=>`<div class="li"><input class="in" value="${esc(p)}" onchange="S.settings.prizes[${i}]=this.value;save()"><button class="x" onclick="S.settings.prizes.splice(${i},1);save();render()">✕</button></div>`).join('')}
+  <div class="row" style="margin-top:10px"><input class="in" id="newPrize" placeholder="פרס חדש, למשל: 🍕 פיצה"><button class="btn sm" onclick="addPrize()">הוסף</button></div></div>`;}
+ else if(setTab==='read'){h+=`<div class="card"><label class="f">מי בודק את הקריאה?</label><div class="seg"><button class="${s.verify==='auto'?'on':''}" onclick="setS('verify','auto')">🎤 המערכת מקשיבה</button><button class="${s.verify==='parent'?'on':''}" onclick="setS('verify','parent')">👨 הורה מאשר</button></div>
+  <div class="hint">בשלבי ההברות (1–3) ההורה תמיד מאשר, כי זיהוי דיבור לא מדייק בהברות בודדות.</div>
+  <label class="f">אחוז הצלחה באימון כדי שייחשב "אימון טוב"</label><input class="in" type="number" min="50" max="100" value="${s.threshold}" onchange="setS('threshold',Math.min(100,Math.max(50,+this.value||85)))">
+  <label class="f">כמה אימונים טובים ברצף כדי לעלות שלב</label><input class="in" type="number" min="1" max="10" value="${s.sessionsToPass}" onchange="setS('sessionsToPass',Math.min(10,Math.max(1,+this.value||3)))">
+  <label class="f">אורך אימון</label><div class="seg">${[[.6,'קצר'],[1,'רגיל'],[1.5,'ארוך']].map(o=>`<button class="${s.length===o[0]?'on':''}" onclick="setS('length',${o[0]})">${o[1]}</button>`).join('')}</div></div>
+  <div class="card"><b>🖍️ סימון המילים בזמן הקריאה</b><div class="hint">במשפטים וסיפורים מופיע סימון צהוב שרץ על המילים.</div>
+  <div class="seg" style="margin-top:8px"><button class="${s.markMode==='follow'?'on':''}" onclick="setS('markMode','follow')">👣 עוקב אחרי הילד</button><button class="${s.markMode==='guide'?'on':''}" onclick="setS('markMode','guide')">🚦 מוביל את הילד</button></div>
+  <div class="hint">"עוקב" – הסימון זז לפי הקצב שבו הילד קורא בפועל. "מוביל" – הסימון רץ בקצב קבוע והילד מתאמן להדביק אותו.</div>
+  ${s.markMode==='guide'?`<label class="f">קצב הסימון המוביל (מילים לדקה, 0 = לפי הקצב האחרון של הילד)</label><input class="in" type="number" min="0" value="${s.guideWpm}" onchange="setS('guideWpm',Math.max(0,+this.value||0))">`:''}</div>
+  <div class="card"><b>⏱️ קצב קריאה תקין (מילים לדקה)</b><div class="hint">קריאה בתוך הטווח מקבלת בונוס קצב. מתאימים לפי גיל הילד.</div>
+  <div class="row" style="margin-top:8px"><div class="sp"><label class="f">מינימום</label><input class="in" type="number" value="${s.paceMin}" onchange="setS('paceMin',+this.value||40)"></div><div class="sp"><label class="f">מקסימום</label><input class="in" type="number" value="${s.paceMax}" onchange="setS('paceMax',+this.value||120)"></div></div></div>
+  <div class="card"><div class="row"><b>🔊 צלילים ומנגינות</b><span class="sp"></span><div class="seg" style="width:140px"><button class="${s.sound?'on':''}" onclick="setS('sound',true)">פועל</button><button class="${!s.sound?'on':''}" onclick="setS('sound',false)">כבוי</button></div></div></div>`;}
+ else if(setTab==='books'){h+=`<div class="card"><b>📚 הוספת ספר / טקסט לקריאה</b><div class="hint">הדביקו טקסט מנוקד (תהילים, ספר קריאה, סיפור) או העלו קובץ טקסט (.txt). האפליקציה תחלק אותו למילים, משפטים וקטעים.</div>
+  <label class="f">שם הספר</label><input class="in" id="bName" placeholder="למשל: תהילים פרק כג">
+  <label class="f">הטקסט</label><textarea class="in" id="bText" rows="6" placeholder="הדביקו כאן טקסט מנוקד..."></textarea>
+  <div class="row" style="margin-top:10px"><label class="btn sm ghost" style="margin:0">📄 העלאת קובץ<input type="file" accept=".txt,text/plain" style="display:none" onchange="loadTxt(this)"></label><span class="sp"></span><button class="btn sm ok" onclick="addBook()">שמירה</button></div></div>
+  ${S.books.map(b=>`<div class="card"><div class="row"><div class="sp"><b>${esc(b.name)}</b><div class="mut">${b.words.length} מילים · ${b.sentences.length} משפטים</div></div><button class="x" onclick="delBook('${b.id}')">🗑️</button></div></div>`).join('')}`;}
+ else if(setTab==='voice'){const tq=a=>esc((a||[]).join('\n'));
+  h+=`<div class="card"><div class="row"><b>🗣️ הקול מדבר אל הילד</b><span class="sp"></span><div class="seg" style="width:140px"><button class="${s.voice?'on':''}" onclick="setS('voice',true)">פועל</button><button class="${!s.voice?'on':''}" onclick="setS('voice',false)">כבוי</button></div></div>
+  <div class="hint">שאלות בשם הילד, קריאות עידוד אחרי הצלחה ומילות חיזוק אחרי טעות.</div></div>
+  <div class="card"><b>❓ שאלות במשחקי הקטנטנים</b><div class="hint">שורה לכל שאלה. <b>{שם}</b> = שם הילד, <b>{מה}</b> = מה מחפשים (למשל "הצבע הלבן"). השאלה הראשונה נאמרת בפתיחה, השאר מתחלפות.</div>
+  <label class="f">👦 לבנים</label><textarea class="in" rows="5" onchange="S.settings.qM=this.value.split('\\n').map(x=>x.trim()).filter(Boolean);save()">${tq(s.qM||DEF.qM)}</textarea>
+  <label class="f">👧 לבנות</label><textarea class="in" rows="5" onchange="S.settings.qF=this.value.split('\\n').map(x=>x.trim()).filter(Boolean);save()">${tq(s.qF||DEF.qF)}</textarea>
+  <button class="btn sm ghost" style="margin-top:10px" onclick="S.settings.qM=null;S.settings.qF=null;save();render()">↺ חזרה לברירת מחדל</button></div>
+  <div class="card"><b>🎉 קריאות עידוד</b><div class="hint">לכל ילד יש קריאות עידוד משלו (למשל "חן הנסיכה!"). עורכים אותן ב"ילדים" ← ✏️ עריכה.</div>
+  ${S.kids.map(k=>`<div class="li">${avatar(k,'sm')}<div class="sp"><b>${esc(k.name)}</b><div class="mut">${esc(fill(kidPraise(k)[0],k))} · ${esc(fill(kidPraise(k)[2]||'',k))}</div></div><button class="btn sm ghost" onclick="editKid('${k.id}')">✏️</button><button class="btn sm" onclick="cheerSay([fill(rnd(kidPraise(kidById('${k.id}'))),kidById('${k.id}'))])">🔊</button></div>`).join('')||'<div class="mut">הוסיפו ילד קודם</div>'}</div>
+  <div class="hint">💡 הקול הממוחשב לא באמת "מתלהב". הכי מרגש לילד לשמוע את אבא: בלשונית "הקלטות" אפשר להקליט בקול שלך את קריאות העידוד של כל ילד.</div>`;}
+ else if(setTab==='rec'){h+=`<div class="card"><b>🎙️ הקלטת הקול שלכם</b><div class="hint">כשהאפליקציה מקריאה לילד (כפתור "שמע" ומצב "שומע וחוזר") היא משמיעה את ההקלטה שלכם – בהגייה ובניקוד מדויקים. בלי הקלטה – קול ממוחשב, שלא תמיד מדייק בניקוד.</div>
+  <label class="f">מה להקליט?</label><select class="in" onchange="recSrc=this.value;drawRecList()">${LEVELS.map((L,i)=>`<option value="L${i}" ${recSrc==='L'+i?'selected':''}>שלב ${i+1} – ${L.title.replace(NQ,'')}</option>`).join('')}${S.books.map(b=>`<option value="B${b.id}" ${recSrc==='B'+b.id?'selected':''}>📚 ${esc(b.name)}</option>`).join('')}${S.kids.map(k=>`<option value="K${k.id}" ${recSrc==='K'+k.id?'selected':''}>🎉 קריאות עידוד – ${esc(k.name)}</option>`).join('')}</select></div>
+  <div class="card" id="recList"><div class="mut">טוען...</div></div><div class="hint">💡 ההקלטות נשמרות במכשיר הזה בלבד (לא נכללות בקובץ הגיבוי).</div>`;setTimeout(drawRecList,0);}
+ else if(setTab==='more'){h+=`<div class="card"><label class="f">🔒 שינוי קוד הורים</label><div class="row"><input class="in" id="newPin" type="password" inputmode="numeric" placeholder="קוד חדש"><button class="btn sm" onclick="chgPin()">שמירה</button></div></div>
+  <div class="card"><b>💾 גיבוי</b><div class="hint">שמירת כל הנתונים (ילדים, תמונות, ספרים, נקודות) לקובץ – ושחזור ממנו.</div><div class="row" style="margin-top:10px"><button class="btn sm" onclick="exportData()">⬇️ ייצוא גיבוי</button><label class="btn sm ghost" style="margin:0">⬆️ שחזור<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label></div></div>`;}
+ return h+`<div class="foot">חי אפליקציות © · קוראים בכיף</div>`;}
+let recSrc='L0',MR=null,recKey=null;
+function recItems(){if(recSrc[0]==='L'){const L=LEVELS[+recSrc.slice(1)];if(!L)return[];const out=[];L.items.forEach(x=>{if(typeof x==='string')out.push(x);else{if(x.say&&!out.includes(x.say))out.push(x.say);out.push(x.name);}});return out;}if(recSrc[0]==='K'){const k=kidById(recSrc.slice(1));if(!k)return[];return kidPraise(k).concat(kidEnc(k)).map(t=>fill(t,k));}const b=S.books.find(x=>'B'+x.id===recSrc);if(!b)return[];return b.words.concat(b.sentences);}
+async function drawRecList(){const el=$('recList');if(!el)return;const keys=new Set(await aKeys());const items=recItems();
+ el.innerHTML=items.length?items.map((t,i)=>{const has=keys.has(t.trim());const on=recKey===t.trim();return `<div class="li"><div class="sp" style="font-family:'Frank Ruhl Libre',serif;font-size:${t.length>30?16:22}px;font-weight:700">${esc(t)}</div>
+ ${has?`<button class="btn sm ghost" onclick="playItem(recItems()[${i}])">▶️</button><button class="x" onclick="aSet(recItems()[${i}].trim(),null).then(drawRecList)">✕</button>`:''}
+ <button class="btn sm ${on?'bad':has?'ok':''}" onclick="recToggle(${i})">${on?'⏹ עצור':has?'🔁':'⏺ הקלט'}</button></div>`;}).join(''):'<div class="mut">אין פריטים</div>';}
+async function recToggle(i){const t=recItems()[i].trim();
+ if(MR&&MR.state==='recording'){const same=recKey===t;MR.stop();if(same)return;await new Promise(r=>setTimeout(r,300));}
+ try{const st=await navigator.mediaDevices.getUserMedia({audio:true});const ch=[];MR=new MediaRecorder(st);recKey=t;
+  MR.ondataavailable=e=>{if(e.data.size)ch.push(e.data);};
+  MR.onstop=async()=>{st.getTracks().forEach(x=>x.stop());const k=recKey;recKey=null;if(ch.length)await aSet(k,new Blob(ch,{type:MR.mimeType||'audio/webm'}));MR=null;drawRecList();toast('✅ ההקלטה נשמרה');};
+  MR.start();drawRecList();}catch(e){toast('🎤 צריך לאשר גישה למיקרופון');}}
+function setS(k,v){S.settings[k]=v;save();render();}
+function addPrize(){const v=$('newPrize').value.trim();if(!v)return;S.settings.prizes.push(v);save();render();}
+function chgPin(){const v=$('newPin').value.trim();if(v.length<4)return toast('קוד של 4 ספרות לפחות');S.pin=v;save();toast('✅ הקוד עודכן');$('newPin').value='';}
+function splitText(t){const clean=t.replace(/\r/g,'').replace(/[ \t]+/g,' ');
+ const sentences=clean.split(/(?<=[.!?:׃])\s+|\n+/).map(x=>x.trim()).filter(x=>norm(x).length>1);
+ const seen=new Set(),words=[];clean.split(/\s+/).forEach(w=>{w=w.replace(/^[^א-ת]+|[^ְ-ת֑-ׇ]+$/g,'');const n=norm(w);if(n.length>=2&&!seen.has(n)){seen.add(n);words.push(w);}});
+ return{sentences,words};}
+function loadTxt(inp){const f=inp.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{$('bText').value=fr.result;if(!$('bName').value)$('bName').value=f.name.replace(/\.[^.]+$/,'');};fr.readAsText(f,'utf-8');}
+function addBook(){const name=$('bName').value.trim()||'ספר חדש';const t=$('bText').value;if(norm(t).length<2)return toast('הדביקו טקסט קודם');
+ const sp=splitText(t);S.books.push({id:uid(),name,words:sp.words,sentences:sp.sentences});save();toast('✅ הספר נשמר');render();}
+function delBook(id){if(!confirm('למחוק את הספר?'))return;S.books=S.books.filter(b=>b.id!==id);save();render();}
+function exportData(){const b=new Blob([JSON.stringify(S)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='kriah-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();}
+function importData(inp){const f=inp.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const d=JSON.parse(fr.result);if(!d.settings||!d.kids)throw 0;S=d;save();toast('✅ הנתונים שוחזרו');render();}catch(e){toast('הקובץ לא תקין');}};fr.readAsText(f);}
+
+/* --- עריכת ילד --- */
+let EK=null;
+function editKid(id){const k=id?kidById(id):null;EK=k?JSON.parse(JSON.stringify(k)):{id:uid(),name:'',age:'',gender:'m',praise:null,enc:null,emoji:rnd(EMOJIS),photo:'',level:0,points:0,goalPts:0,goalSec:0,streak:0,mist:{},history:[],prizes:[],_new:true};drawKidEditor();}
+function drawKidEditor(){const k=EK;
+ modal(`<h3 style="margin-top:0">${k._new?'👶 ילד חדש':'✏️ עריכת '+esc(k.name)}</h3>
+ <div style="text-align:center">${avatar(k,'lg')}<div class="row" style="justify-content:center;gap:8px">
+ <label class="btn sm" style="margin:0">📷 ${k.photo?'החלפת תמונה':'הוספת תמונה'}<input type="file" accept="image/*" style="display:none" onchange="pickPhoto(this)"></label>
+ ${k.photo?`<button class="btn sm ghost" onclick="EK.photo='';drawKidEditor()">הסרת תמונה</button>`:''}</div></div>
+ <label class="f">שם</label><input class="in" id="kName" value="${esc(k.name)}" oninput="EK.name=this.value">
+ <label class="f">גיל</label><input class="in" id="kAge" type="number" value="${esc(k.age)}" oninput="EK.age=this.value">
+ <label class="f">בן או בת? (כדי שהקול ידבר נכון)</label><div class="seg"><button class="${!isF(k)?'on':''}" onclick="EK.gender='m';drawKidEditor()">👦 בן</button><button class="${isF(k)?'on':''}" onclick="EK.gender='f';drawKidEditor()">👧 בת</button></div>
+ <label class="f">🎉 קריאות עידוד אחרי הצלחה</label><textarea class="in" rows="5" oninput="EK.praise=this.value.split('\\n').map(x=>x.trim()).filter(Boolean)">${esc(kidPraise(k).join('\n'))}</textarea>
+ <label class="f">💪 מילים אחרי טעות</label><textarea class="in" rows="4" oninput="EK.enc=this.value.split('\\n').map(x=>x.trim()).filter(Boolean)">${esc(kidEnc(k).join('\n'))}</textarea>
+ <div class="hint">שורה לכל משפט. <b>{שם}</b> יוחלף בשם הילד. למשל: "{שם} נסיך עולם!"</div>
+ <button class="linkbtn" onclick="EK.praise=null;EK.enc=null;drawKidEditor()">↺ חזרה לקריאות ברירת המחדל</button>
+ ${k.photo?'':`<label class="f">דמות (אם אין תמונה)</label><div class="emo-pick">${EMOJIS.map(e=>`<button class="${k.emoji===e?'on':''}" onclick="EK.emoji='${e}';drawKidEditor()">${e}</button>`).join('')}</div>`}
+ <label class="f">שלב נוכחי</label><select class="in" onchange="EK.level=+this.value;EK.streak=0;EK._lvlSet=1">${LEVELS.map((L,i)=>`<option value="${i}" ${k.level===i?'selected':''}>שלב ${i+1} – ${L.title.replace(NQ,'')}</option>`).join('')}</select>
+ <div class="hint">${k._new?'אם לא תבחרו – השלב ייקבע לפי הגיל. ':''}אפשר להתחיל ילד שכבר קורא משלב מתקדם יותר</div>
+ <button class="btn ok full" style="margin-top:16px" onclick="saveKid()">💾 שמירה</button>
+ ${k._new?'':`<div class="row" style="margin-top:12px"><button class="btn sm ghost sp" onclick="resetKid()">🔄 איפוס נקודות</button><button class="btn sm bad sp" onclick="delKid()">🗑️ מחיקה</button></div>`}
+ <button class="linkbtn" style="display:block;margin:10px auto 0" onclick="closeModal()">ביטול</button>`);}
+function pickPhoto(inp){const f=inp.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const s=300,c=document.createElement('canvas');c.width=c.height=s;const m=Math.min(img.width,img.height);c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);EK.photo=c.toDataURL('image/jpeg',.82);drawKidEditor();};img.src=fr.result;};fr.readAsDataURL(f);}
+function saveKid(){if(!EK.name.trim())return toast('צריך שם 🙂');const isNew=EK._new;delete EK._new;
+ const same=(a,b)=>a&&b&&a.join('|')===b.join('|');if(same(EK.praise,DEF.praiseM)||same(EK.praise,DEF.praiseF))EK.praise=null;if(same(EK.enc,DEF.encM)||same(EK.enc,DEF.encF))EK.enc=null;
+ if(isNew&&!EK._lvlSet){const a=+EK.age||0;const id=a>=7?'n4':a===6?'n1':a===5?'a1':'t1';EK.level=Math.max(0,LEVELS.findIndex(L=>L.id===id));}delete EK._lvlSet;EK.name=EK.name.trim();
+ const i=S.kids.findIndex(k=>k.id===EK.id);if(i>=0)S.kids[i]=EK;else S.kids.push(EK);save();closeModal();toast(isNew?'✅ '+EK.name+' נוסף!':'✅ נשמר');render();}
+function resetKid(){if(!confirm('לאפס את הנקודות וההתקדמות ליעד?'))return;EK.points=0;EK.goalPts=0;EK.goalSec=0;saveKid();}
+function delKid(){if(!confirm('למחוק את '+EK.name+'?'))return;S.kids=S.kids.filter(k=>k.id!==EK.id);save();closeModal();render();}
+
+if('speechSynthesis'in window)speechSynthesis.getVoices();
+render();
+</script>
+</body>
+</html>
