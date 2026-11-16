@@ -145,6 +145,10 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 <canvas id="fx"></canvas>
 <script>
 /* ================= קוראים בכיף – חי אפליקציות ================= */
+const APP_VER='__APP_VERSION__';
+const NAT=(()=>{try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()?C:null;}catch(e){return null;}})();
+function natP(n){try{if(!NAT)return null;NAT.Plugins=NAT.Plugins||{};if(NAT.Plugins[n])return NAT.Plugins[n];if(NAT.registerPlugin){const p=NAT.registerPlugin(n);NAT.Plugins[n]=p;return p;}}catch(e){}return null;}
+const KS=natP('KriahSpeech'),NTTS=natP('TextToSpeech'),UPD=natP('Updater');
 const KEY='kriah_v1';
 const LEVELS=[
  {id:'n1',w:3,emo:'🅰️',title:'קָמָץ וּפַתָּח',desc:'הברות עם תנועת "אָ"',type:'syll',pts:1,n:8,items:['בָּ','מָ','לָ','דָּ','גַּ','נַ','סָ','רַ','תָּ','פָּ','כָּ','שָׁ','הַ','זָ','טַ','יָ']},
@@ -274,11 +278,12 @@ let curAudio=null,playTok=0;
 function playOne(t,cheer,tok){return new Promise(async res=>{let done=false;const fin=()=>{if(!done){done=true;res();}};
  const b=await aGet(String(t).trim());if(tok!==playTok)return fin();
  if(b){curAudio=new Audio(URL.createObjectURL(b));curAudio.onended=fin;curAudio.onerror=fin;curAudio.play().catch(fin);setTimeout(fin,15000);return;}
- if(!('speechSynthesis'in window))return fin();
+ if(!NTTS&&!('speechSynthesis'in window))return fin();
  if(!cheer&&!playOne._w){playOne._w=1;toast('🔈 קול ממוחשב – להגייה מדויקת הקליטו בהגדרות ← הקלטות');}
+ if(NTTS){NTTS.speak({text:SPOKEN[t]||t,lang:'he-IL',rate:cheer?1.0:.85,pitch:cheer?1.25:1.0,volume:1.0}).then(fin,fin);setTimeout(fin,Math.max(4000,String(t).length*200));return;}
  const u=new SpeechSynthesisUtterance(SPOKEN[t]||t);u.lang='he-IL';u.rate=cheer?1.02:.8;u.pitch=cheer?1.3:1;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;
  u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);setTimeout(fin,Math.max(3000,String(t).length*180));});}
-async function playSeq(list,cheer){const tok=++playTok;try{speechSynthesis.cancel();}catch(e){}if(curAudio){curAudio.pause();curAudio=null;}
+async function playSeq(list,cheer){const tok=++playTok;try{if(NTTS)NTTS.stop().catch(()=>{});else speechSynthesis.cancel();}catch(e){}if(curAudio){curAudio.pause();curAudio=null;}
  for(const t of list){if(!t)continue;if(tok!==playTok)return;await playOne(t,cheer,tok);}}
 function playItem(t,cheer){return playSeq([t],cheer);}
 function cheerSay(list){if(S.settings.voice)playSeq(list,true);}
@@ -388,7 +393,22 @@ function practiceHTML(){if(P.learn)return learnHTML();if(cur().type==='tap')retu
 function quitSession(){stopRec();if(P&&P.idx>0&&!P.done){if(!confirm('לצאת מהאימון? הנקודות שנצברו יישמרו.'))return;finishSession(true);return;}go('kid');}
 
 /* --- זיהוי דיבור --- */
-const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;
+/* --- זיהוי דיבור של אנדרואיד (באפליקציה המותקנת) – באותו ממשק של הדפדפן --- */
+let NSR_CUR=null,NSR_BOUND=false;
+const NSR_ERR={9:'not-allowed',6:'no-speech',7:'no-speech',1:'network',2:'network',4:'network',8:'aborted',5:'aborted',11:'aborted'};
+function bindNSR(){if(NSR_BOUND||!KS)return;NSR_BOUND=true;
+ KS.addListener('result',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;c._emit(ev.matches||[],!!ev.final);});
+ KS.addListener('error',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;c._err(NSR_ERR[ev.code]||'aborted');});
+ KS.addListener('state',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if(ev.state==='speech'&&P&&P.listening&&P.heard&&!P.heard.firstT)P.heard.firstT=performance.now();if(ev.state==='stopped')c._end();});}
+class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interimResults=true;this.maxAlternatives=5;this.sid=-2;this.finals=[];this.ended=false;}
+ async start(){NSR_CUR=this;bindNSR();try{const p=await KS.ensurePermission();if(NSR_CUR!==this)return;if(!p||!p.granted){this._err('not-allowed');this._end();return;}
+  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.continuous?2200:1400});this.sid=r&&r.sid;}catch(e){this._err('aborted');this._end();}}
+ stop(){try{KS.stop().catch(()=>{});}catch(e){}}
+ abort(){const was=NSR_CUR===this;this.ended=true;if(was){NSR_CUR=null;try{KS.cancel().catch(()=>{});}catch(e){}}}
+ _emit(matches,fin){const alts=matches.map(t=>({transcript:t}));const res=this.finals.map(a=>{const x=a.slice();x.isFinal=true;return x;});const cur=alts.slice();cur.isFinal=fin;res.push(cur);if(fin)this.finals.push(alts);if(this.onresult)this.onresult({resultIndex:0,results:res});}
+ _err(code){if(this.onerror)this.onerror({error:code});}
+ _end(){if(this.ended)return;this.ended=true;if(NSR_CUR===this)NSR_CUR=null;if(this.onend)this.onend();}}
+const SRC=(KS?NativeSR:null)||window.SpeechRecognition||window.webkitSpeechRecognition;
 let REC=null;
 function stopRec(){if(P){P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);}if(REC){const r=REC;REC=null;try{r.abort();}catch(e){}}}
 function micTap(){if(!P||P.done)return;if(P.listening){finishListening();return;}
@@ -557,6 +577,7 @@ function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 י�
   <label class="f">מה להקליט?</label><select class="in" onchange="recSrc=this.value;drawRecList()">${LEVELS.map((L,i)=>`<option value="L${i}" ${recSrc==='L'+i?'selected':''}>שלב ${i+1} – ${L.title.replace(NQ,'')}</option>`).join('')}${S.books.map(b=>`<option value="B${b.id}" ${recSrc==='B'+b.id?'selected':''}>📚 ${esc(b.name)}</option>`).join('')}${S.kids.map(k=>`<option value="K${k.id}" ${recSrc==='K'+k.id?'selected':''}>🎉 קריאות עידוד – ${esc(k.name)}</option>`).join('')}</select></div>
   <div class="card" id="recList"><div class="mut">טוען...</div></div><div class="hint">💡 ההקלטות נשמרות במכשיר הזה בלבד (לא נכללות בקובץ הגיבוי).</div>`;setTimeout(drawRecList,0);}
  else if(setTab==='more'){h+=`<div class="card"><label class="f">🔒 שינוי קוד הורים</label><div class="row"><input class="in" id="newPin" type="password" inputmode="numeric" placeholder="קוד חדש"><button class="btn sm" onclick="chgPin()">שמירה</button></div></div>
+  ${NAT?`<div class="card"><div class="row"><b>📲 גרסה ${esc(APP_VER)}</b><span class="sp"></span><button class="btn sm" onclick="checkUpdate(true)">בדיקת עדכונים</button></div></div>`:''}
   <div class="card"><b>💾 גיבוי</b><div class="hint">שמירת כל הנתונים (ילדים, תמונות, ספרים, נקודות) לקובץ – ושחזור ממנו.</div><div class="row" style="margin-top:10px"><button class="btn sm" onclick="exportData()">⬇️ ייצוא גיבוי</button><label class="btn sm ghost" style="margin:0">⬆️ שחזור<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label></div></div>`;}
  return h+`<div class="foot">חי אפליקציות © · קוראים בכיף</div>`;}
 let recSrc='L0',MR=null,recKey=null;
@@ -618,7 +639,22 @@ let installEvt=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view==='home')render();});
 addEventListener('appinstalled',()=>{installEvt=null;toast('✅ האפליקציה הותקנה!');if(view==='home')render();});
 async function doInstall(){if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice;}catch(e){}installEvt=null;render();}
-if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
+if(!NAT&&'serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
+/* --- עדכונים מתוך האפליקציה --- */
+const REL_API='https://api.github.com/repos/emona501-prog/kriah-befun/releases/latest';
+const verGt=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){if((x[i]||0)>(y[i]||0))return true;if((x[i]||0)<(y[i]||0))return false;}return false;};
+async function checkUpdate(manual){if(!NAT||APP_VER.startsWith('__'))return manual&&toast('בדיקת עדכונים עובדת רק באפליקציה המותקנת');
+ try{const r=await fetch(REL_API,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();const v=String(j.tag_name||'').replace(/^v/,'');const a=(j.assets||[]).find(x=>/\.apk$/i.test(x.name));
+  if(!v||!a||!verGt(v,APP_VER)){if(manual)toast('✅ יש לך את הגרסה האחרונה ('+APP_VER+')');return;}
+  modal(`<h3 style="margin-top:0">🎁 גרסה חדשה: ${esc(v)}</h3><div class="mut" style="white-space:pre-line;max-height:40vh;overflow:auto">${esc((j.body||'').replace(/[#*`]/g,''))}</div>
+  <button class="btn ok full" id="updGo" style="margin-top:14px">📲 עדכן עכשיו</button><button class="linkbtn" style="display:block;margin:8px auto 0" onclick="closeModal()">אחר כך</button><div class="hint">הילדים, הנקודות וההגדרות נשמרים בעדכון.</div>`);
+  $('updGo').onclick=async()=>{const b=$('updGo');if(!UPD||!UPD.download){location.href=a.browser_download_url;return;}b.disabled=true;b.textContent='⬇ מוריד… 0%';let L=null;
+   try{L=await UPD.addListener('progress',p=>{if(p&&p.pct>=0)b.textContent='⬇ מוריד… '+p.pct+'%';});}catch(e){}
+   try{const d=await UPD.download({url:a.browser_download_url,version:v});try{L&&L.remove();}catch(e){}b.textContent='📲 פותח התקנה…';const i=await UPD.install({path:d.path});
+    if(i&&i.needPermission){b.disabled=false;b.textContent='📲 התקן עכשיו';toast('אשרו "התרת התקנה מהמקור הזה", חזרו ולחצו "התקן עכשיו"');b.onclick=()=>UPD.install({path:d.path}).catch(()=>toast('ההתקנה לא נפתחה'));}}
+   catch(e){try{L&&L.remove();}catch(x){}toast('ההורדה נכשלה – פותח בדפדפן');location.href=a.browser_download_url;}};
+ }catch(e){if(manual)toast('אין חיבור לבדיקת עדכונים');}}
+if(NAT){setTimeout(()=>checkUpdate(false),6000);setTimeout(()=>{try{UPD&&UPD.cleanup&&UPD.cleanup();}catch(e){}},12000);}
 if('speechSynthesis'in window)speechSynthesis.getVoices();
 render();
 </script>
