@@ -248,7 +248,10 @@ function align(T,Sp){const n=T.length,m=Sp.length;const dp=Array.from({length:n+
    ומילה נחשבת נכונה רק אם מה שנשמע הוא אחד מהם. ו׳/י׳ שנוספו או חסרו במקום שהניקוד לא מאפשר = טעות קריאה. */
 const PH={'ע':'א','ח':'כ','ט':'ת','ק':'כ'};
 const phon=w=>w.replace(/[עחטק]/g,c=>PH[c]);
+const EXTRA_FORMS={'עכשו':['עכשיו'],'מצוה':['מצווה'],'תקוה':['תקווה'],'ירושלמ':['ירושלים'],'אלהימ':['אלוהים','אלוקים'],'אלהינו':['אלוהינו','אלוקינו'],'אלהי':['אלוהי','אלוקי']};
+const HASHEM=['אדוני','אדני','השמ','ה','יהוה','הוויה'];
 function wordForms(tok){
+ const bare=norm(tok).replace(/\s/g,'');if(/^[ולבכמשה]?יהוה$/.test(bare)||bare==='יי'){const pre=bare.length>4?bare[0]:'';const st=new Set(HASHEM.map(x=>phon(pre+x)).concat(HASHEM.map(phon)));return st;}
  const units=[];for(const ch of tok){if(/[א-ת]/.test(ch))units.push({l:FIN[ch]||ch,m:''});else if(/[֑-ׇ]/.test(ch)&&units.length)units[units.length-1].m+=ch;}
  if(!units.length)return null;let forms=[''];const n=units.length;
  units.forEach((u,i)=>{const m=u.m,has=c=>m.indexOf(c)>=0,next=units[i+1];let base=[u.l],ins=[''];
@@ -262,6 +265,7 @@ function wordForms(tok){
   const out=[];forms.forEach(f=>base.forEach(b=>ins.forEach(x=>out.push(f+b+x))));forms=out.slice(0,128);});
  if(/כ\u05BC?\u05B8ל(?![\u05B0-\u05BC\u05C1\u05C2\u05D0-\u05EA])/.test(tok))forms=forms.concat(forms.map(f=>f.replace(/כל$/,'כול')));
  const kol=/כּ?ָּ?ל(?![ְ-ּׁׂא-ת])/.test(tok);if(kol)forms=forms.concat(forms.map(f=>f.replace(/כל$/,'כול')));
+ (EXTRA_FORMS[bare.replace(/^[ולבכמשה]/,'')]||[]).forEach(x=>forms.push((bare.length>x.length-1&&EXTRA_FORMS[bare]?'':bare[0])+x));(EXTRA_FORMS[bare]||[]).forEach(x=>forms.push(x));
  const set=new Set(forms.map(phon));set.kol=kol;return set;}
 function weqStrict(T,w){if(T.kol&&/קו?ל$/.test(w))return false;return T.has(phon(w));}
 function alignWith(T,Sp,eq){const n=T.length,m=Sp.length;const dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
@@ -272,12 +276,12 @@ function alignWith(T,Sp,eq){const n=T.length,m=Sp.length;const dp=Array.from({le
  return{ok,said};}
 function evalItem(text,finals,interim){
  const toks=text.split(/\s+/).filter(Boolean);const idx=[],T=[];
- toks.forEach((t,i)=>{const f=wordForms(t);if(f){idx.push(i);T.push(f);}});
+ toks.forEach((t,i)=>{t.split(/[\u05BE\-–—]/).forEach(part=>{const f=wordForms(part);if(f){idx.push(i);T.push(f);}});});
  const inter=interim||'';const cands=[finals.map(a=>a[0]).join(' ')+' '+inter];
  finals.forEach(a=>a.slice(1).forEach(alt=>cands.push(finals.map(b=>b===a?alt:b[0]).join(' ')+' '+inter)));
  let best={ok:new Array(T.length).fill(false),cnt:-1,said:{}};
  cands.slice(0,40).forEach(c=>{const r=alignWith(T,wordsOf(c),weqStrict);const cnt=r.ok.filter(Boolean).length;if(cnt>best.cnt)best={ok:r.ok,cnt,said:r.said};});
- const okTok=toks.map(t=>!wordForms(t)),saidTok={};idx.forEach((ti,k)=>{if(best.ok[k])okTok[ti]=true;else if(best.said[k])saidTok[ti]=best.said[k].replace(/[כמנפצ]$/,c=>({'כ':'ך','מ':'ם','נ':'ן','פ':'ף','צ':'ץ'})[c]);});
+ const okTok=toks.map(()=>true),saidTok={};idx.forEach((ti,k)=>{if(best.ok[k])return;okTok[ti]=false;if(best.said[k])saidTok[ti]=best.said[k].replace(/[כמנפצ]$/,c=>({'כ':'ך','מ':'ם','נ':'ן','פ':'ף','צ':'ץ'})[c]);});
  const cnt=Math.max(0,best.cnt);return{okTok,saidTok,cnt,total:T.length,acc:T.length?cnt/T.length:1};}
 
 /* ================= צלילים ואפקטים ================= */
@@ -316,6 +320,7 @@ function playOne(t,cheer,tok){return new Promise(async res=>{let done=false;cons
  u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);setTimeout(fin,Math.max(3000,String(t).length*180));});}
 async function playSeq(list,cheer){const tok=++playTok;try{if(NTTS)NTTS.stop().catch(()=>{});else speechSynthesis.cancel();}catch(e){}if(curAudio){curAudio.pause();curAudio=null;}
  for(const t of list){if(!t)continue;if(tok!==playTok)return;await playOne(t,cheer,tok);}}
+function stopSpeak(){playTok++;try{if(NTTS)NTTS.stop().catch(()=>{});else speechSynthesis.cancel();}catch(e){}if(curAudio){try{curAudio.pause();}catch(e){}curAudio=null;}}
 function playItem(t,cheer){return playSeq([t],cheer);}
 function cheerSay(list){return S.settings.voice?playSeq(list,true):Promise.resolve();}
 function speak(t){try{if(!('speechSynthesis'in window))return toast('אין הקראה בדפדפן הזה');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='he-IL';u.rate=.8;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
@@ -487,7 +492,7 @@ function bindNSR(){if(NSR_BOUND||!KS)return;NSR_BOUND=true;
  KS.addListener('state',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if(ev.state==='speech'&&P&&P.listening&&P.heard&&!P.heard.firstT)P.heard.firstT=performance.now();if(ev.state==='stopped')c._end();});}
 class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interimResults=true;this.maxAlternatives=5;this.sid=-2;this.finals=[];this.ended=false;}
  async start(){NSR_CUR=this;bindNSR();try{const p=await KS.ensurePermission();if(NSR_CUR!==this)return;if(!p||!p.granted){this._err('not-allowed');this._end();return;}
-  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?1100:(this.continuous?2200:1400),hints:this.hints||[],engine:S.settings.engine||'google'});this.sid=r&&r.sid;}catch(e){this._err('aborted');this._end();}}
+  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?1100:(this.continuous?2200:1400),hints:this.hints||[],engine:S.settings.engine||'google'});this.sid=r&&r.sid;if(NSR_CUR!==this){try{KS.cancel().catch(()=>{});}catch(e){}}}catch(e){this._err('aborted');this._end();}}
  stop(){try{KS.stop().catch(()=>{});}catch(e){}}
  abort(){const was=NSR_CUR===this;this.ended=true;if(was){NSR_CUR=null;try{KS.cancel().catch(()=>{});}catch(e){}}}
  _emit(matches,fin){const alts=matches.map(t=>({transcript:t}));const res=this.finals.map(a=>{const x=a.slice();x.isFinal=true;return x;});const cur=alts.slice();cur.isFinal=fin;res.push(cur);if(fin)this.finals.push(alts);if(this.onresult)this.onresult({resultIndex:0,results:res});}
@@ -497,7 +502,7 @@ const SRC=(KS?NativeSR:null)||window.SpeechRecognition||window.webkitSpeechRecog
 let REC=null;
 function stopRec(){if(SAY)SAY.abort();if(P){P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);}if(REC){const r=REC;REC=null;try{r.abort();}catch(e){}}}
 function micTap(){if(!P||P.done)return;if(P.listening){finishListening();return;}
- const it=cur();const sent=TYPE[it.type].sent;const noRec=!CAN_LISTEN()||P.micDenied;
+ stopSpeak();const it=cur();const sent=TYPE[it.type].sent;const noRec=!CAN_LISTEN()||P.micDenied;
  if(noRec&&!sent){toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתורים');return;}
  P.listening=true;P.userStop=false;P.noRec=noRec;P.heard={finals:[],interim:'',firstT:0,lastT:0};P.base=[];
  $('mic').classList.add('on');$('mic').textContent='⏹';$('heard').textContent='🎧 מקשיב...';$('fb').innerHTML='';
@@ -569,7 +574,7 @@ function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TY
   $('fb').innerHTML=`<div class="pop"><div class="big" style="font-size:21px">${esc(enc)} 💪</div>${sent&&ev.total>1?`${scoreHTML}<div class="mut">המילים באדום נקראו לא נכון – מתחת לכל אחת כתוב מה נשמע</div>`:(said[0]?`<div class="mut">נשמע: ${esc(said[0])}</div>`:'')}
    ${P.attempts>=3?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="playItem(cur().text)">${G('🔊 שמע איך קוראים','🔊 שמעי איך קוראים')}</button><button class="btn sm ghost" onclick="skipItem()">נמשיך הלאה ➜</button></div>`:''}</div>`;}}
 function skipItem(){if(!P)return;stopRec();if(!P.done){P.res[P.idx]=false;const k=kidById(curKid);k.mist=k.mist||{};const key=cur().key;k.mist[key]=(k.mist[key]||0)+1;save();}nextItem();}
-function nextItem(){if(!P)return;P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
+function nextItem(){if(!P)return;stopSpeak();P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
 function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.round((Date.now()-P.start)/1000);
  k.goalSec=(k.goalSec||0)+sec;k.totalSec=(k.totalSec||0)+sec;
  const n=P.res.length||1;const good=P.res.filter(Boolean).length;const acc=good/Math.max(1,P.items.length);
