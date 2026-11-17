@@ -214,7 +214,7 @@ function whatPre(L){if(L.id==='t1')return 'הצבע ה';if(L.id==='t8')return '�
 const WCOL=['#ff6b6b','#ffa41b','#ffd93d','#6bcb77','#4d96ff','#9b5de5','#f15bb5','#00bbf9'];
 
 let S=load();
-function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
+function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,autoListen:true,answerSec:6,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.settings){const d=defState();s.settings=Object.assign(d.settings,s.settings);s.books=s.books||[];if(!s.ver){(s.kids||[]).forEach(k=>k.level=(k.level||0)+EARLY.length);s.ver=2;}return s;}}catch(e){}return defState();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('⚠️ הזיכרון מלא – נסו תמונה קטנה יותר או מחקו ספר');}}
 const $=id=>document.getElementById(id);
@@ -312,7 +312,7 @@ function playOne(t,cheer,tok){return new Promise(async res=>{let done=false;cons
 async function playSeq(list,cheer){const tok=++playTok;try{if(NTTS)NTTS.stop().catch(()=>{});else speechSynthesis.cancel();}catch(e){}if(curAudio){curAudio.pause();curAudio=null;}
  for(const t of list){if(!t)continue;if(tok!==playTok)return;await playOne(t,cheer,tok);}}
 function playItem(t,cheer){return playSeq([t],cheer);}
-function cheerSay(list){if(S.settings.voice)playSeq(list,true);}
+function cheerSay(list){return S.settings.voice?playSeq(list,true):Promise.resolve();}
 function speak(t){try{if(!('speechSynthesis'in window))return toast('אין הקראה בדפדפן הזה');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='he-IL';u.rate=.8;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}}
 
 /* ================= יעד ================= */
@@ -325,9 +325,10 @@ function goalLabel(k){const u=S.settings.goalType==='minutes'?'דקות':'נקו
 let view='home',curKid=null,P=null,setTab='kids';
 function render(){stopRec();const a=$('app');
  if(view==='home')a.innerHTML=homeHTML();else if(view==='kid')a.innerHTML=kidHTML();else if(view==='practice'){a.innerHTML=practiceHTML();
-  if(P&&P.learn){if(P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);}
-  else if(P&&cur().type==='tap')setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening)playItem(P.mode==='listen'?cur().q:cur().sq,true);},450);
-  else if(P&&P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&!P.listening)playItem(cur().text);},450);}else if(view==='wheel'){a.innerHTML=wheelHTML();drawWheel(0);}else if(view==='settings')a.innerHTML=settingsHTML();
+  if(P&&P.learn){if(P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);else autoSay(P.learnItems[P.li],true,600);}
+  else if(P&&cur().type==='tap'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key){if(P.mode==='listen')playItem(cur().q,true);else askAndListen();}},450);}
+  else if(P&&P.mode!=='listen'&&!isParentMode(cur())&&S.settings.autoListen){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)micTap();},900);}
+  else if(P&&P.mode==='listen'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.listening&&sayKey()===key)playItem(cur().text).then(()=>{if(S.settings.autoListen&&!isParentMode(cur())&&view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)setTimeout(()=>micTap(),300);});},450);}}else if(view==='wheel'){a.innerHTML=wheelHTML();drawWheel(0);}else if(view==='settings')a.innerHTML=settingsHTML();
  window.scrollTo(0,0);}
 function go(v){view=v;render();}
 function homeHTML(){const sr=!!SRC;
@@ -399,31 +400,51 @@ function sayHTML(){const it=cur();const k=kidById(curKid);const L=LEVELS[P.lvl];
  return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 📖 אומרים לבד</div>
  <div class="card learn"><div class="lvis" style="margin:28px 0 22px">${it.pv?it.pv:it.o.show}</div><div class="tqt">${esc(it.sq)}</div><div class="lname" id="ans" style="display:none">${esc(it.o.name)}</div></div>
  <div class="heard" id="heard">🎤 לחץ על המיקרופון ותגיד בקול</div>
- <div class="micwrap"><button class="side" onclick="playItem(cur().sq,true)">❓<small>שאלה</small></button><button class="mic" id="mic" onclick="sayListen(cur().o,false)">🎤</button><button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
+ <div class="micwrap"><button class="side" onclick="if(SAY)SAY.abort();askAndListen()">❓<small>שאלה</small></button><button class="mic" id="mic" onclick="sayListen(cur().o,false)">🎤</button><button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
  <div style="text-align:center"><button class="linkbtn" onclick="sayResult(true,'')">👨 אישור הורה – אמר נכון</button></div><div class="fb" id="fb"></div>`;}
-function matchSay(alts,o){const forms=[norm(sayName(o.name)),norm(plain(o.name))].map(x=>x.replace(/\s/g,''));const num=o.cnt||o.num;
- return alts.some(a=>{if(num&&new RegExp('(^|\\D)'+num+'(\\D|$)').test(a))return true;const n=norm(a);const comp=n.replace(/\s/g,'');
-  if(forms.some(f=>comp.includes(f)))return true;return n.split(' ').some(w=>forms.some(f=>weq(w,f)||weq(w.replace(/^ה/,''),f)));});}
+/* --- הקשבה חכמה לתשובה קצרה (צבע, צורה, חיה, אות, מספר):
+   התשובה חייבת להיות אחת מהאפשרויות של השלב – לכן בוחרים את האפשרות הכי קרובה למה שנשמע */
+const skw=w=>phon(norm(w)).replace(/\s/g,'').replace(/[וי]/g,'');
+function sayScore(alts,o,L){const items=L&&L.type==='tap'?L.items:[o];const num=o.cnt||o.num;let best=null;
+ for(const a of alts){const dg=(String(a).match(/\d+/)||[])[0];if(dg&&items.some(x=>x.cnt||x.num)){const x=items.find(y=>(y.cnt||y.num)===+dg);if(x)return{ok:x===o||+dg===num,heard:dg};}
+  const n=norm(a);if(!n)continue;const ws=n.split(' ');const cands=new Set([n.replace(/\s/g,'')].concat(ws).concat(ws.map(w=>w.replace(/^[הו]/,''))));
+  for(const c of cands){const cs=skw(c);if(!cs)continue;for(const x of items){for(const f of [sayName(x.name),plain(x.name)]){const fs=skw(f);if(!fs)continue;
+   const d=cs===fs?0:(cs.includes(fs)&&fs.length>=2?0.1:lev(cs,fs)/Math.max(fs.length,cs.length));if(!best||d<best.d)best={d,x,heard:a};}}}}
+ if(!best)return{ok:false,heard:alts[0]};return{ok:best.x===o&&best.d<=0.34,heard:best.heard,other:best.d<=0.34&&best.x!==o?best.x:null};}
+function matchSay(alts,o){return sayScore(alts,o,P&&P.lvl!==undefined?LEVELS[P.lvl]:null).ok;}
+function hintsFor(L,o){const out=new Set([sayName(o.name)]);if(L&&L.type==='tap')L.items.forEach(x=>out.add(sayName(x.name)));return [...out].slice(0,40);}
 let SAY=null;
-function sayListen(o,isLearn){if(SAY){try{SAY.stop();}catch(e){}return;}
- if(!CAN_LISTEN()||(P&&P.micDenied)){toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתור');return;}
- const r=new SRC();r.lang='he-IL';r.interimResults=true;r.maxAlternatives=5;r.continuous=false;const alts=new Set();let hit=false;SAY=r;REC=r;
- const m=$('mic');if(m){m.classList.add('on');m.textContent='⏹';}$('heard').textContent='🎧 מקשיב...';$('fb').innerHTML='';
- r.onresult=e=>{for(let i=0;i<e.results.length;i++)Array.from(e.results[i]).forEach(a=>alts.add(a.transcript));const l=[...alts];$('heard').textContent='🎧 '+(l[0]||'');if(!hit&&matchSay(l,o)){hit=true;try{r.stop();}catch(x){}}};
- r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){if(P)P.micDenied=true;toast('🎤 צריך לאשר גישה למיקרופון');}};
- r.onend=()=>{if(SAY!==r)return;SAY=null;REC=null;const mm=$('mic');if(mm){mm.classList.remove('on');mm.textContent='🎤';}const l=[...alts];
-  if(!l.length){$('heard').textContent='🙉 לא שמעתי. לחץ על המיקרופון ותגיד בקול רם';return;}
-  const ok=hit||matchSay(l,o);if(isLearn)learnSaid(ok);else sayResult(ok,l[0]);};
- try{r.start();}catch(e){SAY=null;REC=null;}}
+function sayKey(){return P?(P.learn?'L'+P.li:'Q'+P.idx)+'|'+P.attempts:'';}
+function sayListen(o,isLearn,auto){if(SAY){if(!auto)SAY.stop();return;}
+ if(!CAN_LISTEN()||(P&&P.micDenied)){if(!auto)toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתור');return;}
+ const L=P&&P.lvl!==undefined?LEVELS[P.lvl]:null;const t0=Date.now(),win=(S.settings.answerSec||6)*1000;const alts=new Set();let hit=false,stopped=false,dead=false,rec=null;
+ const ui=on=>{const m=$('mic');if(m){m.classList.toggle('on',on);m.textContent=on?'⏹':'🎤';}};
+ const tick=setInterval(()=>{if(!alts.size&&$('heard')){const left=Math.max(0,Math.ceil((win-(Date.now()-t0))/1000));$('heard').textContent='🎧 מקשיב... תגידו בקול ('+left+')';}},250);
+ const ctl={stop(){stopped=true;try{rec&&rec.stop();}catch(e){}},abort(){dead=true;stopped=true;clearInterval(tick);clearTimeout(timer);try{rec&&rec.abort();}catch(e){}if(SAY===ctl)SAY=null;REC=null;ui(false);}};
+ SAY=ctl;ui(true);if($('fb'))$('fb').innerHTML='';
+ const finish=()=>{if(dead)return;dead=true;clearInterval(tick);clearTimeout(timer);ui(false);if(SAY===ctl)SAY=null;REC=null;const l=[...alts];
+  if(!l.length){if($('heard'))$('heard').textContent='🙉 לא שמעתי. לחצו על 🎤 ותגידו בקול רם';return;}
+  const r=sayScore(l,o,L);if(isLearn)learnSaid(r.ok);else sayResult(r.ok,r.heard);};
+ const timer=setTimeout(()=>ctl.stop(),win);
+ const run=()=>{if(dead)return;const r=new SRC();rec=r;r.lang='he-IL';r.interimResults=true;r.maxAlternatives=8;r.continuous=false;r.hints=hintsFor(L,o);r.short=true;REC=r;
+  r.onresult=e=>{if(dead)return;for(let i=0;i<e.results.length;i++)Array.from(e.results[i]).forEach(a=>alts.add(a.transcript));const l=[...alts];if($('heard'))$('heard').textContent='🎧 '+(l[0]||'');
+   if(!hit&&sayScore(l,o,L).ok){hit=true;ctl.stop();}};
+  r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){if(P)P.micDenied=true;stopped=true;toast('🎤 צריך לאשר גישה למיקרופון');}};
+  r.onend=()=>{if(dead||rec!==r)return;if(!stopped&&!alts.size&&Date.now()-t0<win-500){run();return;}finish();};
+  try{r.start();}catch(e){finish();}};
+ run();}
+function autoSay(o,isLearn,delay){if(!S.settings.autoListen||!CAN_LISTEN()||(P&&P.micDenied))return;const key=sayKey();
+ setTimeout(()=>{if(view==='practice'&&P&&!P.done&&sayKey()===key&&!SAY&&!P.listening)sayListen(o,isLearn,true);},delay||250);}
+function askAndListen(){const it=cur();playItem(it.sq,true).then(()=>autoSay(it.o,false,150));}
 function learnSaid(ok){const k=kidById(curKid);if(ok){SND.ok();confetti(40);const ph=fill(rnd(kidPraise(k)),k);$('fb').innerHTML=`<div class="pop big" style="font-size:24px;font-weight:800">${esc(ph)} 🎉</div>`;cheerSay([ph]);setTimeout(()=>{if(P&&P.learn&&view==='practice')learnNext();},2300);}
- else{SND.fail();const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>`;cheerSay([e]);}}
-function sayResult(ok,heard){if(!P||P.done)return;if(SAY){const r=SAY;SAY=null;try{r.abort();}catch(e){}}const it=cur();const k=kidById(curKid);k.mist=k.mist||{};
+ else{SND.fail();const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>`;const o=P.learnItems[P.li];cheerSay([e]).then(()=>autoSay(o,true,200));}}
+function sayResult(ok,heard){if(!P||P.done)return;if(SAY)SAY.abort();const it=cur();const k=kidById(curKid);k.mist=k.mist||{};
  if(ok){P.done=true;let pts=it.pts*2;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
   P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();const a=$('ans');if(a)a.style.display='block';
   SND.ok();confetti(60);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),400);
   $('fb').innerHTML=`<div class="pop big" style="font-size:26px;font-weight:800">${esc(ph)} 🎉</div>`;setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2700);}
  else{P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();const e=fill(rnd(kidEnc(k)),k);
-  $('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>${P.attempts>=2?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="$('ans').style.display='block';playItem(cur().o.name)">💡 רמז – איך אומרים?</button><button class="btn sm ghost" onclick="skipItem()">נמשיך ➜</button></div>`:''}`;cheerSay([e]);}}
+  $('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>${P.attempts>=2?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="$('ans').style.display='block';playItem(cur().o.name)">💡 רמז – איך אומרים?</button><button class="btn sm ghost" onclick="skipItem()">נמשיך ➜</button></div>`:''}`;const o=it.o;cheerSay([e]).then(()=>{if(P&&P.attempts<3)autoSay(o,false,200);});}}
 function tapHTML(){const it=cur();if(P.mode!=='listen')return sayHTML();if(!it.q)buildQ(it);
  return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(LEVELS[P.lvl].title)}</div>
  <div class="tq">${it.pv||''}<div class="tqt">${it.qHTML}</div><button class="side" onclick="playItem(cur().q,true)">🔊</button></div>
@@ -460,7 +481,7 @@ function bindNSR(){if(NSR_BOUND||!KS)return;NSR_BOUND=true;
  KS.addListener('state',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if(ev.state==='speech'&&P&&P.listening&&P.heard&&!P.heard.firstT)P.heard.firstT=performance.now();if(ev.state==='stopped')c._end();});}
 class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interimResults=true;this.maxAlternatives=5;this.sid=-2;this.finals=[];this.ended=false;}
  async start(){NSR_CUR=this;bindNSR();try{const p=await KS.ensurePermission();if(NSR_CUR!==this)return;if(!p||!p.granted){this._err('not-allowed');this._end();return;}
-  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.continuous?2200:1400});this.sid=r&&r.sid;}catch(e){this._err('aborted');this._end();}}
+  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?900:(this.continuous?2200:1400),hints:this.hints||[]});this.sid=r&&r.sid;}catch(e){this._err('aborted');this._end();}}
  stop(){try{KS.stop().catch(()=>{});}catch(e){}}
  abort(){const was=NSR_CUR===this;this.ended=true;if(was){NSR_CUR=null;try{KS.cancel().catch(()=>{});}catch(e){}}}
  _emit(matches,fin){const alts=matches.map(t=>({transcript:t}));const res=this.finals.map(a=>{const x=a.slice();x.isFinal=true;return x;});const cur=alts.slice();cur.isFinal=fin;res.push(cur);if(fin)this.finals.push(alts);if(this.onresult)this.onresult({resultIndex:0,results:res});}
@@ -468,7 +489,7 @@ class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interi
  _end(){if(this.ended)return;this.ended=true;if(NSR_CUR===this)NSR_CUR=null;if(this.onend)this.onend();}}
 const SRC=(KS?NativeSR:null)||window.SpeechRecognition||window.webkitSpeechRecognition;
 let REC=null;
-function stopRec(){if(SAY){const r=SAY;SAY=null;try{r.abort();}catch(e){}}if(P){P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);}if(REC){const r=REC;REC=null;try{r.abort();}catch(e){}}}
+function stopRec(){if(SAY)SAY.abort();if(P){P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);}if(REC){const r=REC;REC=null;try{r.abort();}catch(e){}}}
 function micTap(){if(!P||P.done)return;if(P.listening){finishListening();return;}
  const it=cur();const sent=TYPE[it.type].sent;const noRec=!CAN_LISTEN()||P.micDenied;
  if(noRec&&!sent){toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתורים');return;}
@@ -612,6 +633,9 @@ function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 י�
   <div class="row" style="margin-top:10px"><input class="in" id="newPrize" placeholder="פרס חדש, למשל: 🍕 פיצה"><button class="btn sm" onclick="addPrize()">הוסף</button></div></div>`;}
  else if(setTab==='read'){h+=`<div class="card"><label class="f">מי בודק את הקריאה?</label><div class="seg"><button class="${s.verify==='auto'?'on':''}" onclick="setS('verify','auto')">🎤 המערכת מקשיבה</button><button class="${s.verify==='parent'?'on':''}" onclick="setS('verify','parent')">👨 הורה מאשר</button></div>
   <div class="hint">בשלבי ההברות (1–3) ההורה תמיד מאשר, כי זיהוי דיבור לא מדייק בהברות בודדות.</div>
+  <div class="row" style="margin-top:14px"><b>🎧 הקשבה אוטומטית</b><span class="sp"></span><div class="seg" style="width:140px"><button class="${s.autoListen?'on':''}" onclick="setS('autoListen',true)">פועל</button><button class="${!s.autoListen?'on':''}" onclick="setS('autoListen',false)">כבוי</button></div></div>
+  <div class="hint">אחרי שאלה או מילה חדשה – המיקרופון נפתח לבד, בלי ללחוץ.</div>
+  <label class="f">כמה שניות לתת לילד לענות</label><input class="in" type="number" min="3" max="20" value="${s.answerSec}" onchange="setS('answerSec',Math.min(20,Math.max(3,+this.value||6)))">
   <label class="f">אחוז הצלחה באימון כדי שייחשב "אימון טוב"</label><input class="in" type="number" min="50" max="100" value="${s.threshold}" onchange="setS('threshold',Math.min(100,Math.max(50,+this.value||85)))">
   <label class="f">כמה אימונים טובים ברצף כדי לעלות שלב</label><input class="in" type="number" min="1" max="10" value="${s.sessionsToPass}" onchange="setS('sessionsToPass',Math.min(10,Math.max(1,+this.value||3)))">
   <label class="f">אורך אימון</label><div class="seg">${[[.6,'קצר'],[1,'רגיל'],[1.5,'ארוך']].map(o=>`<button class="${s.length===o[0]?'on':''}" onclick="setS('length',${o[0]})">${o[1]}</button>`).join('')}</div></div>
