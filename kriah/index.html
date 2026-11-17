@@ -190,8 +190,6 @@ LEVELS.unshift(...EARLY);
 const WORLDS={1:{name:'עולם הקטנטנים (גיל 3–4)',emo:'🧸'},2:{name:'עולם האותיות (גיל 4–5)',emo:'🔤'},3:{name:'עולם הניקוד (גיל 5–6)',emo:'🎵'},4:{name:'עולם השטף (גיל 7–9)',emo:'📖'}};
 const TYPE={tap:{size:40,sent:false},syll:{size:100,sent:false},word:{size:62,sent:false},phrase:{size:44,sent:true},sentence:{size:34,sent:true},story:{size:30,sent:true}};
 const EMOJIS=['🦁','🐯','🐼','🦊','🐰','🐻','🦄','🐸','🐵','🐱','🐶','🚀','⭐','🌈','⚽','👑'];
-const PRAISE=['כל הכבוד','מעולה','איזה אלוף','וואו','יופי של קריאה','מדהים','נהדר','אלופה/אלוף'];
-const TRY=['כמעט! בוא ננסה שוב 💪','עוד פעם קטנה ותצליח 😊','קרוב מאוד! נסה שוב','לאט ובקול ברור – אתה יכול!'];
 const DEF={
  praiseM:['כל הכבוד {שם}!','איזה אלוף!','{שם} נסיך עולם!','אין כמוך!!!','אתה קורא מעולה!','וואו, איזה גאון!','מדהים {שם}!','יש! צדקת!'],
  praiseF:['כל הכבוד {שם}!','איזו אלופה!','{שם} הנסיכה!','אין כמוך!!!','את קוראת מעולה!','וואו, איזו גאונה!','מדהים {שם}!','יש! צדקת!'],
@@ -200,6 +198,7 @@ const DEF={
  qM:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בוא נראה אם אתה יודע איפה {מה}?','{שם}, תראה לי איפה {מה}!','מי יודע איפה {מה}? אולי {שם}?'],
  qF:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בואי נראה אם את יודעת איפה {מה}?','{שם}, תראי לי איפה {מה}!','מי יודעת איפה {מה}? אולי {שם}?']};
 const isF=k=>!!k&&k.gender==='f';
+const G=(m,f)=>isF(typeof curKid!=='undefined'&&curKid?kidById(curKid):null)?f:m;
 const kidPraise=k=>k.praise&&k.praise.length?k.praise:(isF(k)?DEF.praiseF:DEF.praiseM);
 const kidEnc=k=>k.enc&&k.enc.length?k.enc:(isF(k)?DEF.encF:DEF.encM);
 const qList=k=>{const a=isF(k)?S.settings.qF:S.settings.qM;return a&&a.length?a:(isF(k)?DEF.qF:DEF.qM);};
@@ -210,11 +209,15 @@ const SPOKEN={'אָדֹם':'אדום','כָּחֹל':'כחול','צָהֹב':'צ
  'אֳנִיָּה':'אונייה','מַסּוֹק':'מסוק','כִּסֵּא':'כיסא','דֻּבִּי':'דובי','מִטָּה':'מיטה','אֲבַטִּיחַ':'אבטיח','גְּבִינָה':'גבינה','שְׁתַּיִם':'שתיים','אַרְבַּע':'ארבע','תֵּשַׁע':'תשע',
  'כַּמָּה יֵשׁ?':'כמה יש?','סָמֶךְ':'סמך','צָדִי':'צדי','וָו':'וו'};
 const sayName=n=>SPOKEN[n]||plain(n);
+/* תיקוני הגייה לקול הממוחשב: קָמָץ קָטָן נקרא O (כָּל = "כול"), חֲטַף קָמָץ = O */
+const KOL_RE=/כ(ּ?)ָ(ּ?)ל(?![ְ-ּׁׂא-ת])/g;
+const QK_WORDS={'חָכְמָה':'חוֹכְמָה','תָּכְנִית':'תּוֹכְנִית','אָזְנַיִם':'אוֹזְנַיִם','קָדְשׁוֹ':'קוֹדְשׁוֹ','צָרְכֵי':'צוֹרְכֵי','חָפְשִׁי':'חוֹפְשִׁי','בָּקְרוֹ':'בּוֹקְרוֹ'};
+function ttsFix(t){t=String(t).replace(/ׇ/g,'ֹ').replace(/ֳ/g,'ֹ').replace(KOL_RE,'כ$1$2ֹל');for(const k in QK_WORDS)t=t.split(k).join(QK_WORDS[k]);return t;}
 function whatPre(L){if(L.id==='t1')return 'הצבע ה';if(L.id==='t8')return 'המספר ';if(L.w===2)return 'האות ';return 'ה';}
 const WCOL=['#ff6b6b','#ffa41b','#ffd93d','#6bcb77','#4d96ff','#9b5de5','#f15bb5','#00bbf9'];
 
 let S=load();
-function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,autoListen:true,answerSec:6,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
+function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,engine:'google',autoListen:true,answerSec:6,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.settings){const d=defState();s.settings=Object.assign(d.settings,s.settings);s.books=s.books||[];if(!s.ver){(s.kids||[]).forEach(k=>k.level=(k.level||0)+EARLY.length);s.ver=2;}return s;}}catch(e){}return defState();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('⚠️ הזיכרון מלא – נסו תמונה קטנה יותר או מחקו ספר');}}
 const $=id=>document.getElementById(id);
@@ -257,8 +260,10 @@ function wordForms(tok){
    else if((has('ִ')||has('ֵ'))&&!(next&&next.l==='י'))ins=['','י'];
    else if(has('ָ')&&next&&next.m.indexOf('ְ')>=0&&i<n-2)ins=['','ו'];}
   const out=[];forms.forEach(f=>base.forEach(b=>ins.forEach(x=>out.push(f+b+x))));forms=out.slice(0,128);});
- return new Set(forms.map(phon));}
-function weqStrict(T,w){return T.has(phon(w));}
+ if(/כ\u05BC?\u05B8ל(?![\u05B0-\u05BC\u05C1\u05C2\u05D0-\u05EA])/.test(tok))forms=forms.concat(forms.map(f=>f.replace(/כל$/,'כול')));
+ const kol=/כּ?ָּ?ל(?![ְ-ּׁׂא-ת])/.test(tok);if(kol)forms=forms.concat(forms.map(f=>f.replace(/כל$/,'כול')));
+ const set=new Set(forms.map(phon));set.kol=kol;return set;}
+function weqStrict(T,w){if(T.kol&&/קו?ל$/.test(w))return false;return T.has(phon(w));}
 function alignWith(T,Sp,eq){const n=T.length,m=Sp.length;const dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=eq(T[i],Sp[j])?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
  const ok=new Array(n).fill(false),pairs=[];let i=0,j=0;
@@ -306,8 +311,8 @@ function playOne(t,cheer,tok){return new Promise(async res=>{let done=false;cons
  if(b){curAudio=new Audio(URL.createObjectURL(b));curAudio.onended=fin;curAudio.onerror=fin;curAudio.play().catch(fin);setTimeout(fin,15000);return;}
  if(!NTTS&&!('speechSynthesis'in window))return fin();
  if(!cheer&&!playOne._w){playOne._w=1;toast('🔈 קול ממוחשב – להגייה מדויקת הקליטו בהגדרות ← הקלטות');}
- if(NTTS){NTTS.speak({text:SPOKEN[t]||t,lang:'he-IL',rate:cheer?1.0:.85,pitch:cheer?1.25:1.0,volume:1.0}).then(fin,fin);setTimeout(fin,Math.max(4000,String(t).length*200));return;}
- const u=new SpeechSynthesisUtterance(SPOKEN[t]||t);u.lang='he-IL';u.rate=cheer?1.02:.8;u.pitch=cheer?1.3:1;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;
+ if(NTTS){NTTS.speak({text:ttsFix(SPOKEN[t]||t),lang:'he-IL',rate:cheer?1.0:.85,pitch:cheer?1.25:1.0,volume:1.0}).then(fin,fin);setTimeout(fin,Math.max(4000,String(t).length*200));return;}
+ const u=new SpeechSynthesisUtterance(ttsFix(SPOKEN[t]||t));u.lang='he-IL';u.rate=cheer?1.02:.8;u.pitch=cheer?1.3:1;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;
  u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);setTimeout(fin,Math.max(3000,String(t).length*180));});}
 async function playSeq(list,cheer){const tok=++playTok;try{if(NTTS)NTTS.stop().catch(()=>{});else speechSynthesis.cancel();}catch(e){}if(curAudio){curAudio.pause();curAudio=null;}
  for(const t of list){if(!t)continue;if(tok!==playTok)return;await playOne(t,cheer,tok);}}
@@ -343,9 +348,9 @@ function openKid(id){curKid=id;SND.tap();go('kid');}
 /* ================= מסך ילד ================= */
 function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goalReached(k);
  let html=`<div class="top"><button class="ibtn" onclick="go('home')">➜ חזרה</button><div class="pts" style="font-size:17px">⭐ ${k.points||0}</div></div>
- <div class="hero">${avatar(k,'lg')}<h2>שלום ${esc(k.name)}! 👋</h2><div class="mut">${rnd(['מוכן לקרוא היום?','בוא נשבור שיא!','כל מילה מקרבת אותך לפרס 🎁'])}</div></div>
+ <div class="hero">${avatar(k,'lg')}<h2>שלום ${esc(k.name)}! 👋</h2><div class="mut">${rnd([G('מוכן לקרוא היום?','מוכנה לקרוא היום?'),G('בוא נשבור שיא!','בואי נשבור שיא!'),'כל מילה מקרבת אותך לפרס 🎁'])}</div></div>
  <div class="card"><div class="row"><b>🎯 היעד שלי</b><span class="sp"></span><span class="mut">${goalLabel(k)}</span></div><div class="bar"><i style="width:${goalPct(k)}%"></i></div>
- ${gr?`<button class="btn warn full pop" style="margin-top:10px" onclick="go('wheel')">🎡 הגעת ליעד! סובב את גלגל המזל</button>`:`<div class="mut">כשמגיעים ליעד – מסובבים את גלגל המזל 🎡</div>`}</div>
+ ${gr?`<button class="btn warn full pop" style="margin-top:10px" onclick="go('wheel')">${G('🎡 הגעת ליעד! סובב את גלגל המזל','🎡 הגעת ליעד! סובבי את גלגל המזל')}</button>`:`<div class="mut">כשמגיעים ליעד – מסובבים את גלגל המזל 🎡</div>`}</div>
  <div class="seg" style="margin-bottom:12px"><button class="${k.mode!=='listen'?'on':''}" onclick="setMode('read')">📖 אני קורא לבד</button><button class="${k.mode==='listen'?'on':''}" onclick="setMode('listen')">👂 שומע וחוזר</button></div>
  <div class="hint" style="margin:-6px 0 12px;text-align:center">${k.mode==='listen'?'👂 האפליקציה אומרת – והילד מוצא או חוזר אחריה':'📖 הילד אומר בעצמו – והמערכת מקשיבה ובודקת'}</div>
  <button class="btn ok full" style="font-size:20px;padding:18px" onclick="startLevel(${Math.min(k.level,LEVELS.length-1)})">▶️ התחל לקרוא</button>
@@ -354,7 +359,7 @@ function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goal
   const st=i<k.level?'done':i===k.level?'cur':'lock';
   html+=`<button class="lvl ${st}" ${st==='lock'?'disabled':''} onclick="startLevel(${i})"><div class="num">${st==='done'?'✅':st==='lock'?'🔒':L.emo}</div><div class="sp"><div class="t">שלב ${i+1} · ${esc(L.title)}</div><div class="d">${esc(L.desc)}</div>
   ${st==='cur'?`<div class="dots">${Array.from({length:S.settings.sessionsToPass},(_,j)=>`<b class="${j<(k.streak||0)?'on':''}"></b>`).join('')}</div>`:''}</div></button>`;});
- if(k.level>=LEVELS.length)html+=`<div class="card" style="text-align:center"><div style="font-size:50px">🏆</div><b>סיימת את כל השלבים! אלוף אמיתי!</b></div>`;
+ if(k.level>=LEVELS.length)html+=`<div class="card" style="text-align:center"><div style="font-size:50px">🏆</div><b>${G('סיימת את כל השלבים! אלוף אמיתי!','סיימת את כל השלבים! אלופה אמיתית!')}</b></div>`;
  return html;}
 
 /* ================= אימון ================= */
@@ -385,13 +390,13 @@ const CAN_LISTEN=()=>!!SRC&&window.isSecureContext;
 function isParentMode(it){return it.type==='syll'||S.settings.verify==='parent'||!CAN_LISTEN()||(P&&P.micDenied);}
 function pbarHTML(list,pos,isLearn){const k=kidById(curKid);return `<div class="pbar"><button class="ibtn" onclick="quitSession()">✕</button><div class="pdots">${list.map((_,i)=>`<b class="${i<pos?(isLearn||P.res[i]?'ok':'no'):i===pos?'cur':''}"></b>`).join('')}</div>${avatar(k,'sm')}</div>`;}
 function learnHTML(){const L=LEVELS[P.lvl];const o=P.learnItems[P.li];const vis=(o.cnt?`<div class="cntv">${'🍎'.repeat(o.cnt)}</div>`:'')+o.show;
- return pbarHTML(P.learnItems,P.li,true)+`<div class="mut" style="text-align:center;margin-bottom:8px">🃏 בוא נכיר · ${esc(L.title)}</div>
+ return pbarHTML(P.learnItems,P.li,true)+`<div class="mut" style="text-align:center;margin-bottom:8px">${G('🃏 בוא נכיר','🃏 בואי נכיר')} · ${esc(L.title)}</div>
  <div class="card learn" ${P.mode==='listen'?'onclick="playItem(P.learnItems[P.li].name)"':''}><div class="lvis">${vis}</div><div class="lname">${esc(o.name)}</div></div>
- ${P.mode==='listen'?'':`<div class="heard" id="heard">🎤 לחץ על המיקרופון ותגיד בקול: מה זה?</div><div class="micwrap"><button class="side" onclick="playItem(P.learnItems[P.li].name)">🔊<small>שמע</small></button><button class="mic" id="mic" onclick="sayListen(P.learnItems[P.li],true)">🎤</button><span style="width:60px"></span></div><div class="fb" id="fb"></div>`}
- <div class="row"><button class="btn ghost sp" onclick="playItem(P.learnItems[P.li].name)">🔊 ${P.mode==='listen'?'שוב':'איך אומרים?'}</button><button class="btn ok sp" onclick="learnNext()">${P.li<P.learnItems.length-1?'הבא ➜':'🎮 בוא נשחק!'}</button></div>`;}
+ ${P.mode==='listen'?'':`<div class="heard" id="heard">${G('🎤 לחץ על המיקרופון ותגיד בקול: מה זה?','🎤 לחצי על המיקרופון ותגידי בקול: מה זה?')}</div><div class="micwrap"><button class="side" onclick="playItem(P.learnItems[P.li].name)">🔊<small>שמע</small></button><button class="mic" id="mic" onclick="sayListen(P.learnItems[P.li],true)">🎤</button><span style="width:60px"></span></div><div class="fb" id="fb"></div>`}
+ <div class="row"><button class="btn ghost sp" onclick="playItem(P.learnItems[P.li].name)">🔊 ${P.mode==='listen'?'שוב':'איך אומרים?'}</button><button class="btn ok sp" onclick="learnNext()">${P.li<P.learnItems.length-1?'הבא ➜':G('🎮 בוא נשחק!','🎮 בואי נשחק!')}</button></div>`;}
 function learnNext(){SND.tap();P.li++;if(P.li>=P.learnItems.length){P.learn=false;P.start=Date.now();}render();}
 function buildQ(it){const k=kidById(curKid);const L=LEVELS[P.lvl];const n=P.qn=(P.qn||0)+1;let tpl;
- if(it.o.cnt)tpl=n===1?(isF(k)?'בואי נספור, {שם}! כמה יש?':'בוא נספור, {שם}! כמה יש?'):rnd(['ועכשיו, כמה יש?','{שם}, כמה יש פה?','בוא נספור שוב, כמה יש?']);
+ if(it.o.cnt)tpl=n===1?(isF(k)?'בואי נספור, {שם}! כמה יש?':'בוא נספור, {שם}! כמה יש?'):rnd(['ועכשיו, כמה יש?','{שם}, כמה יש פה?',G('בוא נספור שוב, כמה יש?','בואי נספור שוב, כמה יש?')]);
  else{const qs=qList(k);tpl=n===1||qs.length<2?qs[0]:rnd(qs.slice(1));}
  const pre=whatPre(L);it.q=fill(tpl,k,pre+sayName(it.o.name));it.short=it.o.cnt?'כמה יש?':'איפה '+pre+sayName(it.o.name)+'?';
  it.qHTML=esc(fill(tpl,k,'§')).replace('§',esc(pre)+'<b>'+esc(it.o.name)+'</b>');}
@@ -399,7 +404,7 @@ function sayQ(L){if(L.id==='t1')return 'איזה צבע זה?';if(L.id==='t8')re
 function sayHTML(){const it=cur();const k=kidById(curKid);const L=LEVELS[P.lvl];if(!it.sq){const q=sayQ(L);it.sq=(P.idx===0?k.name+', ':'')+q;}
  return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 📖 אומרים לבד</div>
  <div class="card learn"><div class="lvis" style="margin:28px 0 22px">${it.pv?it.pv:it.o.show}</div><div class="tqt">${esc(it.sq)}</div><div class="lname" id="ans" style="display:none">${esc(it.o.name)}</div></div>
- <div class="heard" id="heard">🎤 לחץ על המיקרופון ותגיד בקול</div>
+ <div class="heard" id="heard">${G('🎤 לחץ על המיקרופון ותגיד בקול','🎤 לחצי על המיקרופון ותגידי בקול')}</div>
  <div class="micwrap"><button class="side" onclick="if(SAY)SAY.abort();askAndListen()">❓<small>שאלה</small></button><button class="mic" id="mic" onclick="sayListen(cur().o,false)">🎤</button><button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
  <div style="text-align:center"><button class="linkbtn" onclick="sayResult(true,'')">👨 אישור הורה – אמר נכון</button></div><div class="fb" id="fb"></div>`;}
 /* --- הקשבה חכמה לתשובה קצרה (צבע, צורה, חיה, אות, מספר):
@@ -410,7 +415,7 @@ function sayScore(alts,o,L){const items=L&&L.type==='tap'?L.items:[o];const num=
   const n=norm(a);if(!n)continue;const ws=n.split(' ');const cands=new Set([n.replace(/\s/g,'')].concat(ws).concat(ws.map(w=>w.replace(/^[הו]/,''))));
   for(const c of cands){const cs=skw(c);if(!cs)continue;for(const x of items){for(const f of [sayName(x.name),plain(x.name)]){const fs=skw(f);if(!fs)continue;
    const d=cs===fs?0:(cs.includes(fs)&&fs.length>=2?0.1:lev(cs,fs)/Math.max(fs.length,cs.length));if(!best||d<best.d)best={d,x,heard:a};}}}}
- if(!best)return{ok:false,heard:alts[0]};return{ok:best.x===o&&best.d<=0.34,heard:best.heard,other:best.d<=0.34&&best.x!==o?best.x:null};}
+ if(!best)return{ok:false,heard:alts[0]};return{ok:best.x===o&&best.d<=0.45,heard:best.heard,other:best.d<=0.45&&best.x!==o?best.x:null};}
 function matchSay(alts,o){return sayScore(alts,o,P&&P.lvl!==undefined?LEVELS[P.lvl]:null).ok;}
 function hintsFor(L,o){const out=new Set([sayName(o.name)]);if(L&&L.type==='tap')L.items.forEach(x=>out.add(sayName(x.name)));return [...out].slice(0,40);}
 let SAY=null;
@@ -419,14 +424,14 @@ function sayListen(o,isLearn,auto){if(SAY){if(!auto)SAY.stop();return;}
  if(!CAN_LISTEN()||(P&&P.micDenied)){if(!auto)toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתור');return;}
  const L=P&&P.lvl!==undefined?LEVELS[P.lvl]:null;const t0=Date.now(),win=(S.settings.answerSec||6)*1000;const alts=new Set();let hit=false,stopped=false,dead=false,rec=null;
  const ui=on=>{const m=$('mic');if(m){m.classList.toggle('on',on);m.textContent=on?'⏹':'🎤';}};
- const tick=setInterval(()=>{if(!alts.size&&$('heard')){const left=Math.max(0,Math.ceil((win-(Date.now()-t0))/1000));$('heard').textContent='🎧 מקשיב... תגידו בקול ('+left+')';}},250);
+ const tick=setInterval(()=>{if(!alts.size&&$('heard')){const left=Math.max(0,Math.ceil((win-(Date.now()-t0))/1000));$('heard').textContent=G('🎧 מקשיב... תגיד בקול (','🎧 מקשיב... תגידי בקול (')+left+')';}},250);
  const ctl={stop(){stopped=true;try{rec&&rec.stop();}catch(e){}},abort(){dead=true;stopped=true;clearInterval(tick);clearTimeout(timer);try{rec&&rec.abort();}catch(e){}if(SAY===ctl)SAY=null;REC=null;ui(false);}};
  SAY=ctl;ui(true);if($('fb'))$('fb').innerHTML='';
  const finish=()=>{if(dead)return;dead=true;clearInterval(tick);clearTimeout(timer);ui(false);if(SAY===ctl)SAY=null;REC=null;const l=[...alts];
-  if(!l.length){if($('heard'))$('heard').textContent='🙉 לא שמעתי. לחצו על 🎤 ותגידו בקול רם';return;}
+  if(!l.length){if($('heard'))$('heard').textContent=G('🙉 לא שמעתי. לחץ על 🎤 ותגיד בקול רם','🙉 לא שמעתי. לחצי על 🎤 ותגידי בקול רם');return;}
   const r=sayScore(l,o,L);if(isLearn)learnSaid(r.ok);else sayResult(r.ok,r.heard);};
  const timer=setTimeout(()=>ctl.stop(),win);
- const run=()=>{if(dead)return;const r=new SRC();rec=r;r.lang='he-IL';r.interimResults=true;r.maxAlternatives=8;r.continuous=false;r.hints=hintsFor(L,o);r.short=true;REC=r;
+ const run=()=>{if(dead)return;const r=new SRC();rec=r;r.lang='he-IL';r.interimResults=true;r.maxAlternatives=10;r.continuous=false;r.hints=hintsFor(L,o);r.short=true;REC=r;
   r.onresult=e=>{if(dead)return;for(let i=0;i<e.results.length;i++)Array.from(e.results[i]).forEach(a=>alts.add(a.transcript));const l=[...alts];if($('heard'))$('heard').textContent='🎧 '+(l[0]||'');
    if(!hit&&sayScore(l,o,L).ok){hit=true;ctl.stop();}};
   r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){if(P)P.micDenied=true;stopped=true;toast('🎤 צריך לאשר גישה למיקרופון');}};
@@ -463,7 +468,7 @@ function practiceHTML(){if(P.learn)return learnHTML();if(cur().type==='tap')retu
  return `<div class="pbar"><button class="ibtn" onclick="quitSession()">✕</button><div class="pdots">${P.items.map((_,i)=>`<b class="${i<P.idx?(P.res[i]?'ok':'no'):i===P.idx?'cur':''}"></b>`).join('')}</div>${avatar(k,'sm')}</div>
  <div class="mut" style="text-align:center;margin-bottom:8px">${title}${P.mode==='listen'?' · <b style="color:var(--pri)">👂 הקשב וחזור אחריי</b>':''}</div>
  <div class="read${it.type==='sentence'||it.type==='story'?' tele':''}" id="read" style="font-size:${T.size}px">${it.text.split(/\s+/).filter(Boolean).map((w,i)=>`<span class="w" data-i="${i}">${esc(w)}</span>`).join(' ')}</div>
- <div class="heard" id="heard">${pm&&it.type==='syll'?'קרא בקול – ההורה יאשר 👂':'לחץ על המיקרופון וקרא בקול 🎤'}</div>
+ <div class="heard" id="heard">${pm&&it.type==='syll'?G('קרא בקול – ההורה יאשר 👂','קראי בקול – ההורה יאשר 👂'):G('לחץ על המיקרופון וקרא בקול 🎤','לחצי על המיקרופון וקראי בקול 🎤')}</div>
  <div class="micwrap"><button class="side" onclick="playItem(cur().text)">🔊<small>שמע</small></button>
  <button class="mic" id="mic" onclick="micTap()">🎤</button>
  <button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
@@ -478,10 +483,11 @@ const NSR_ERR={9:'not-allowed',6:'no-speech',7:'no-speech',1:'network',2:'networ
 function bindNSR(){if(NSR_BOUND||!KS)return;NSR_BOUND=true;
  KS.addListener('result',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;c._emit(ev.matches||[],!!ev.final);});
  KS.addListener('error',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;c._err(NSR_ERR[ev.code]||'aborted');});
+ KS.addListener('rms',ev=>{const m=document.getElementById('mic');if(!m||!m.classList.contains('on'))return;const v=Math.max(0,Math.min(1,((ev.db||0)+2)/12));m.style.transform='scale('+(1+v*.22).toFixed(3)+')';m.style.filter='brightness('+(1+v*.35).toFixed(2)+')';});
  KS.addListener('state',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if(ev.state==='speech'&&P&&P.listening&&P.heard&&!P.heard.firstT)P.heard.firstT=performance.now();if(ev.state==='stopped')c._end();});}
 class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interimResults=true;this.maxAlternatives=5;this.sid=-2;this.finals=[];this.ended=false;}
  async start(){NSR_CUR=this;bindNSR();try{const p=await KS.ensurePermission();if(NSR_CUR!==this)return;if(!p||!p.granted){this._err('not-allowed');this._end();return;}
-  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?900:(this.continuous?2200:1400),hints:this.hints||[]});this.sid=r&&r.sid;}catch(e){this._err('aborted');this._end();}}
+  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?1100:(this.continuous?2200:1400),hints:this.hints||[],engine:S.settings.engine||'google'});this.sid=r&&r.sid;}catch(e){this._err('aborted');this._end();}}
  stop(){try{KS.stop().catch(()=>{});}catch(e){}}
  abort(){const was=NSR_CUR===this;this.ended=true;if(was){NSR_CUR=null;try{KS.cancel().catch(()=>{});}catch(e){}}}
  _emit(matches,fin){const alts=matches.map(t=>({transcript:t}));const res=this.finals.map(a=>{const x=a.slice();x.isFinal=true;return x;});const cur=alts.slice();cur.isFinal=fin;res.push(cur);if(fin)this.finals.push(alts);if(this.onresult)this.onresult({resultIndex:0,results:res});}
@@ -529,7 +535,7 @@ function finishListening(){if(!P||!P.listening)return;P.listening=false;P.userSt
  if(REC){const r=REC;REC=null;try{r.stop();}catch(e){}}
  const m=$('mic');if(m){m.classList.remove('on');m.textContent='🎤';}
  if(P.noRec){$('heard').textContent='👂 ההורה מאשר: קרא נכון?';return;}
- const h=P.heard;if(!h.finals.length&&!h.interim.trim()){if(!P.micDenied){$('heard').textContent='🙉 לא שמעתי. לחץ על המיקרופון וקרא בקול רם';}return;}
+ const h=P.heard;if(!h.finals.length&&!h.interim.trim()){if(!P.micDenied){$('heard').textContent=G('🙉 לא שמעתי. לחץ על המיקרופון וקרא בקול רם','🙉 לא שמעתי. לחצי על המיקרופון וקראי בקול רם');}return;}
  judge(evalItem(cur().text,h.finals,h.interim),false);}
 function parentJudge(ok){if(!P||P.done)return;stopRec();const m=$('mic');if(m){m.classList.remove('on');m.textContent='🎤';}
  const toks=cur().text.split(/\s+/).filter(Boolean);
@@ -553,15 +559,15 @@ function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TY
   if(P.attempts===0){if(k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}}
   P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
   P.ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([P.ph]),450);const bigOne=it.type==='sentence'||it.type==='story';(bigOne?SND.big:SND.ok)();confetti(bigOne?140:60);plusPts(pts);
-  const pTxt=pace==='good'?`<div style="color:var(--ok);font-weight:700">🎯 קצב מושלם! (+${bonus} בונוס)</div>`:pace==='slow'?`<div class="mut">🐢 קראת נכון! בפעם הבאה ננסה קצת יותר שוטף</div>`:pace==='fast'?`<div class="mut">🐇 מהיר! נסה קצת יותר לאט וברור</div>`:'';
-  $('fb').innerHTML=`<div class="pop"><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div class="big">${esc(P.ph)} 🎉</div>${scoreHTML}${wrongN?`<div class="mut">⚠️ ${wrongN===1?'מילה אחת באדום צריכה':wrongN+' מילים באדום צריכות'} תיקון – נסה לקרוא אותן שוב</div>`:''}${pTxt}
+  const pTxt=pace==='good'?`<div style="color:var(--ok);font-weight:700">🎯 קצב מושלם! (+${bonus} בונוס)</div>`:pace==='slow'?`<div class="mut">🐢 קראת נכון! בפעם הבאה ננסה קצת יותר שוטף</div>`:pace==='fast'?`<div class="mut">${G('🐇 מהיר! נסה קצת יותר לאט וברור','🐇 מהירה! נסי קצת יותר לאט וברור')}</div>`:'';
+  $('fb').innerHTML=`<div class="pop"><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div class="big">${esc(P.ph)} 🎉</div>${scoreHTML}${wrongN?`<div class="mut">⚠️ ${wrongN===1?'מילה אחת באדום צריכה':wrongN+' מילים באדום צריכות'} תיקון – ${G('נסה','נסי')} לקרוא אותן שוב</div>`:''}${pTxt}
    ${sent?`<button class="btn ok" style="margin-top:12px" onclick="nextItem()">המשך ➜</button>`:''}</div>`;
   P.done=true;if(!sent)setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2600);
  }else{
   P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();$('read').classList.remove('shake');void $('read').offsetWidth;$('read').classList.add('shake');
   const pct=Math.round(ev.acc*100);const enc=fill(rnd(kidEnc(k)),k);cheerSay([enc]);
   $('fb').innerHTML=`<div class="pop"><div class="big" style="font-size:21px">${esc(enc)} 💪</div>${sent&&ev.total>1?`${scoreHTML}<div class="mut">המילים באדום נקראו לא נכון – מתחת לכל אחת כתוב מה נשמע</div>`:(said[0]?`<div class="mut">נשמע: ${esc(said[0])}</div>`:'')}
-   ${P.attempts>=3?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="playItem(cur().text)">🔊 שמע איך קוראים</button><button class="btn sm ghost" onclick="skipItem()">נמשיך הלאה ➜</button></div>`:''}</div>`;}}
+   ${P.attempts>=3?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="playItem(cur().text)">${G('🔊 שמע איך קוראים','🔊 שמעי איך קוראים')}</button><button class="btn sm ghost" onclick="skipItem()">נמשיך הלאה ➜</button></div>`:''}</div>`;}}
 function skipItem(){if(!P)return;stopRec();if(!P.done){P.res[P.idx]=false;const k=kidById(curKid);k.mist=k.mist||{};const key=cur().key;k.mist[key]=(k.mist[key]||0)+1;save();}nextItem();}
 function nextItem(){if(!P)return;P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
 function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.round((Date.now()-P.start)/1000);
@@ -581,9 +587,9 @@ function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.r
  const gr=goalReached(k);
  $('app').innerHTML=`<div class="hero pop" style="padding-top:24px"><div style="font-size:80px">${leveled?'🚀':emoji}</div>${avatar(k,'lg')}<h2>${leveled?'עלית שלב!!! 🎉':'סיימת את האימון!'}</h2></div>
  <div class="card" style="text-align:center"><div style="font-size:20px;font-weight:800">${good} מתוך ${P===null?n:n} נכון בפעם הראשונה</div><div class="pts" style="font-size:22px;margin-top:10px">+${earned} ⭐</div>
- ${leveled?`<div style="margin-top:12px;font-size:18px;font-weight:700;color:var(--pri)">ברוך הבא לשלב ${k.level+1}${k.level<LEVELS.length?': '+esc(LEVELS[k.level].title):''}</div>`:lvlMsg?`<div style="margin-top:12px">${lvlMsg}</div>`:''}</div>
+ ${leveled?`<div style="margin-top:12px;font-size:18px;font-weight:700;color:var(--pri)">${G('ברוך הבא','ברוכה הבאה')} לשלב ${k.level+1}${k.level<LEVELS.length?': '+esc(LEVELS[k.level].title):''}</div>`:lvlMsg?`<div style="margin-top:12px">${lvlMsg}</div>`:''}</div>
  <div class="card"><div class="row"><b>🎯 היעד</b><span class="sp"></span><span class="mut">${goalLabel(k)}</span></div><div class="bar"><i style="width:${goalPct(k)}%"></i></div></div>
- ${gr?`<button class="btn warn full pop" style="font-size:20px;padding:18px;margin-bottom:14px" onclick="go('wheel')">🎡 סובב את גלגל המזל!</button>`:''}
+ ${gr?`<button class="btn warn full pop" style="font-size:20px;padding:18px;margin-bottom:14px" onclick="go('wheel')">${G('🎡 סובב את גלגל המזל!','🎡 סובבי את גלגל המזל!')}</button>`:''}
  <div class="row"><button class="btn ok sp" onclick="${lvlDone!==undefined?`startLevel(${Math.min(k.level,LEVELS.length-1)})`:'chooseBook()'}">▶️ עוד אימון</button><button class="btn ghost sp" onclick="go('kid')">חזרה</button></div>`;
  if(gr)setTimeout(()=>{SND.big();},900);}
 
@@ -591,9 +597,9 @@ function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.r
 let wAng=0,spinning=false;
 function wheelHTML(){const k=kidById(curKid);const gr=goalReached(k);
  return `<div class="top"><button class="ibtn" onclick="go('kid')">➜ חזרה</button>${avatar(k,'sm')}</div>
- <div class="hero"><h2>🎡 גלגל המזל של ${esc(k.name)}</h2><div class="mut">${gr?'לחץ על "סובב" וגלה מה זכית!':'עוד לא הגעת ליעד – המשך לקרוא! 📖'}</div></div>
+ <div class="hero"><h2>🎡 גלגל המזל של ${esc(k.name)}</h2><div class="mut">${gr?G('לחץ על "סובב" וגלה מה זכית!','לחצי על "סובבי" וגלי מה זכית!'):G('עוד לא הגעת ליעד – המשך לקרוא! 📖','עוד לא הגעת ליעד – המשיכי לקרוא! 📖')}</div></div>
  <div class="wheelbox"><div class="pointer">🔻</div><canvas id="wheel" width="620" height="620"></canvas></div>
- <button class="btn warn full" style="font-size:22px;padding:18px" id="spinBtn" ${gr?'':'disabled style="opacity:.5"'} onclick="spin()">🎰 סובב!</button>
+ <button class="btn warn full" style="font-size:22px;padding:18px" id="spinBtn" ${gr?'':'disabled style="opacity:.5"'} onclick="spin()">${G('🎰 סובב!','🎰 סובבי!')}</button>
  ${(k.prizes||[]).length?`<div class="card" style="margin-top:16px"><b>🎁 הפרסים שזכיתי בהם</b>${k.prizes.slice(-8).reverse().map(p=>`<div class="li"><span>${esc(p.t)}</span><span class="sp"></span><span class="mut">${new Date(p.d).toLocaleDateString('he-IL')}</span></div>`).join('')}</div>`:''}`;}
 function drawWheel(a){const c=$('wheel');if(!c)return;const x=c.getContext('2d');const P2=S.settings.prizes.length?S.settings.prizes:['🎁 הפתעה'];const n=P2.length,R=310,seg=Math.PI*2/n;
  x.clearRect(0,0,620,620);x.save();x.translate(310,310);x.rotate(a);
@@ -635,6 +641,8 @@ function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 י�
   <div class="hint">בשלבי ההברות (1–3) ההורה תמיד מאשר, כי זיהוי דיבור לא מדייק בהברות בודדות.</div>
   <div class="row" style="margin-top:14px"><b>🎧 הקשבה אוטומטית</b><span class="sp"></span><div class="seg" style="width:140px"><button class="${s.autoListen?'on':''}" onclick="setS('autoListen',true)">פועל</button><button class="${!s.autoListen?'on':''}" onclick="setS('autoListen',false)">כבוי</button></div></div>
   <div class="hint">אחרי שאלה או מילה חדשה – המיקרופון נפתח לבד, בלי ללחוץ.</div>
+  ${NAT?`<label class="f">🧠 מנוע זיהוי הדיבור</label><div class="seg"><button class="${(s.engine||'google')==='google'?'on':''}" onclick="setS('engine','google')">Google (מומלץ)</button><button class="${s.engine==='default'?'on':''}" onclick="setS('engine','default')">ברירת המחדל בטלפון</button></div>
+  <div class="hint">בסמסונג ברירת המחדל היא לפעמים המנוע של סמסונג, שפחות טוב בעברית. אם השמיעה לא טובה – נסו להחליף.</div><div class="hint" id="engInfo"></div>`:''}
   <label class="f">כמה שניות לתת לילד לענות</label><input class="in" type="number" min="3" max="20" value="${s.answerSec}" onchange="setS('answerSec',Math.min(20,Math.max(3,+this.value||6)))">
   <label class="f">אחוז הצלחה באימון כדי שייחשב "אימון טוב"</label><input class="in" type="number" min="50" max="100" value="${s.threshold}" onchange="setS('threshold',Math.min(100,Math.max(50,+this.value||85)))">
   <label class="f">כמה אימונים טובים ברצף כדי לעלות שלב</label><input class="in" type="number" min="1" max="10" value="${s.sessionsToPass}" onchange="setS('sessionsToPass',Math.min(10,Math.max(1,+this.value||3)))">
@@ -646,6 +654,8 @@ function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 י�
   <div class="card"><b>⏱️ קצב קריאה תקין (מילים לדקה)</b><div class="hint">קריאה בתוך הטווח מקבלת בונוס קצב. מתאימים לפי גיל הילד.</div>
   <div class="row" style="margin-top:8px"><div class="sp"><label class="f">מינימום</label><input class="in" type="number" value="${s.paceMin}" onchange="setS('paceMin',+this.value||40)"></div><div class="sp"><label class="f">מקסימום</label><input class="in" type="number" value="${s.paceMax}" onchange="setS('paceMax',+this.value||120)"></div></div></div>
   <div class="card"><div class="row"><b>🔊 צלילים ומנגינות</b><span class="sp"></span><div class="seg" style="width:140px"><button class="${s.sound?'on':''}" onclick="setS('sound',true)">פועל</button><button class="${!s.sound?'on':''}" onclick="setS('sound',false)">כבוי</button></div></div></div>`;}
+  if(setTab==='read')setTimeout(showEngines,0);
+ if(false){}
  else if(setTab==='books'){h+=`<div class="card"><b>📚 הוספת ספר / טקסט לקריאה</b><div class="hint">הדביקו טקסט מנוקד (תהילים, ספר קריאה, סיפור) או העלו קובץ טקסט (.txt). האפליקציה תחלק אותו למילים, משפטים וקטעים.</div>
   <label class="f">שם הספר</label><input class="in" id="bName" placeholder="למשל: תהילים פרק כג">
   <label class="f">הטקסט</label><textarea class="in" id="bText" rows="6" placeholder="הדביקו כאן טקסט מנוקד..."></textarea>
@@ -680,6 +690,7 @@ async function recToggle(i){const t=recItems()[i].trim();
   MR.ondataavailable=e=>{if(e.data.size)ch.push(e.data);};
   MR.onstop=async()=>{st.getTracks().forEach(x=>x.stop());const k=recKey;recKey=null;if(ch.length)await aSet(k,new Blob(ch,{type:MR.mimeType||'audio/webm'}));MR=null;drawRecList();toast('✅ ההקלטה נשמרה');};
   MR.start();drawRecList();}catch(e){toast('🎤 צריך לאשר גישה למיקרופון');}}
+function showEngines(){try{if(!KS||!KS.engines)return;KS.engines().then(r=>{const e=$('engInfo');if(!e)return;const g=r.google?'✅ נמצא מנוע של Google':'⚠️ לא נמצא מנוע של Google – כדאי לעדכן את אפליקציית Google מחנות Play';e.textContent=g+' · מנועים בטלפון: '+((r.engines||[]).join(', ')||'אין');}).catch(()=>{});}catch(e){}}
 function setS(k,v){S.settings[k]=v;save();render();}
 function addPrize(){const v=$('newPrize').value.trim();if(!v)return;S.settings.prizes.push(v);save();render();}
 function chgPin(){const v=$('newPin').value.trim();if(v.length<4)return toast('קוד של 4 ספרות לפחות');S.pin=v;save();toast('✅ הקוד עודכן');$('newPin').value='';}
