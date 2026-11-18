@@ -192,7 +192,7 @@ const TYPE={tap:{size:40,sent:false},syll:{size:100,sent:false},word:{size:62,se
 const EMOJIS=['🦁','🐯','🐼','🦊','🐰','🐻','🦄','🐸','🐵','🐱','🐶','🚀','⭐','🌈','⚽','👑'];
 const DEF={
  praiseM:['כל הכבוד {שם}!','איזה אלוף!','{שם} נסיך עולם!','אין כמוך!!!','אתה קורא מעולה!','וואו, איזה גאון!','מדהים {שם}!','יש! צדקת!'],
- praiseF:['כל הכבוד {שם}!','איזו אלופה!','{שם} הנסיכה!','אין כמוך!!!','את קוראת מעולה!','וואו, איזו גאונה!','מדהים {שם}!','יש! צדקת!'],
+ praiseF:['כל הכבוד {שם}!','איזו אלופה!','{שם} הנסיכה!','אין כמוך!!!','את קוראת מעולה!','וואו, איזו גאונה!','מדהימה {שם}!','יש! צדקת!'],
  encM:['כמעט! רוצה לנסות שוב?','לא נורא, נסה שוב!','כמעט אבל לא, בוא ננסה עוד פעם','אתה יכול! עוד ניסיון אחד','קרוב מאוד {שם}! נסה שוב'],
  encF:['כמעט! רוצה לנסות שוב?','לא נורא, נסי שוב!','כמעט אבל לא, בואי ננסה עוד פעם','את יכולה! עוד ניסיון אחד','קרוב מאוד {שם}! נסי שוב'],
  qM:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בוא נראה אם אתה יודע איפה {מה}?','{שם}, תראה לי איפה {מה}!','מי יודע איפה {מה}? אולי {שם}?'],
@@ -212,12 +212,15 @@ const sayName=n=>SPOKEN[n]||plain(n);
 /* תיקוני הגייה לקול הממוחשב: קָמָץ קָטָן נקרא O (כָּל = "כול"), חֲטַף קָמָץ = O */
 const KOL_RE=/כ(ּ?)ָ(ּ?)ל(?![ְ-ּׁׂא-ת])/g;
 const QK_WORDS={'חָכְמָה':'חוֹכְמָה','תָּכְנִית':'תּוֹכְנִית','אָזְנַיִם':'אוֹזְנַיִם','קָדְשׁוֹ':'קוֹדְשׁוֹ','צָרְכֵי':'צוֹרְכֵי','חָפְשִׁי':'חוֹפְשִׁי','בָּקְרוֹ':'בּוֹקְרוֹ'};
+/* מילים שנכתבות אותו דבר לבן ולבת אבל נשמעות אחרת – מנקדים לקול לפי מין הילד */
+const GEN_W={'כמוך':['כָּמוֹךָ','כָּמוֹךְ'],'שלך':['שֶׁלְּךָ','שֶׁלָּךְ'],'לך':['לְךָ','לָךְ'],'אותך':['אוֹתְךָ','אוֹתָךְ'],'בך':['בְּךָ','בָּךְ'],'ממך':['מִמְּךָ','מִמֵּךְ'],'צדקת':['צָדַקְתָּ','צָדַקְתְּ'],'קראת':['קָרָאתָ','קָרָאתְ'],'הצלחת':['הִצְלַחְתָּ','הִצְלַחְתְּ'],'ידעת':['יָדַעְתָּ','יָדַעְתְּ'],'אמרת':['אָמַרְתָּ','אָמַרְתְּ'],'מצאת':['מָצָאתָ','מָצָאתְ'],'ענית':['עָנִיתָ','עָנִית'],'סיימת':['סִיַּמְתָּ','סִיַּמְתְּ'],'עשית':['עָשִׂיתָ','עָשִׂית'],'זכית':['זָכִיתָ','זָכִית'],'עלית':['עָלִיתָ','עָלִית'],'הגעת':['הִגַּעְתָּ','הִגַּעְתְּ'],'ניצחת':['נִצַּחְתָּ','נִצַּחְתְּ'],'שיחקת':['שִׂחַקְתָּ','שִׂחַקְתְּ']};
+function ttsGender(t){const f=isF(curKid?kidById(curKid):null)?1:0;return String(t).replace(/[\u05D0-\u05EA]+/g,(w,off,str)=>{const prev=str[off-1],next=str[off+w.length];if((prev&&/[\u05B0-\u05C7]/.test(prev))||(next&&/[\u05B0-\u05C7]/.test(next)))return w;return GEN_W[w]?GEN_W[w][f]:w;});}
 function ttsFix(t){t=String(t).replace(/ׇ/g,'ֹ').replace(/ֳ/g,'ֹ').replace(KOL_RE,'כ$1$2ֹל');for(const k in QK_WORDS)t=t.split(k).join(QK_WORDS[k]);return t;}
 function whatPre(L){if(L.id==='t1')return 'הצבע ה';if(L.id==='t8')return 'המספר ';if(L.w===2)return 'האות ';return 'ה';}
 const WCOL=['#ff6b6b','#ffa41b','#ffd93d','#6bcb77','#4d96ff','#9b5de5','#f15bb5','#00bbf9'];
 
 let S=load();
-function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,engine:'google',autoListen:true,answerSec:6,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
+function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,engine2:'default',autoListen:true,answerSec:6,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.settings){const d=defState();s.settings=Object.assign(d.settings,s.settings);s.books=s.books||[];if(!s.ver){(s.kids||[]).forEach(k=>k.level=(k.level||0)+EARLY.length);s.ver=2;}return s;}}catch(e){}return defState();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('⚠️ הזיכרון מלא – נסו תמונה קטנה יותר או מחקו ספר');}}
 const $=id=>document.getElementById(id);
@@ -315,8 +318,8 @@ function playOne(t,cheer,tok){return new Promise(async res=>{let done=false;cons
  if(b){curAudio=new Audio(URL.createObjectURL(b));curAudio.onended=fin;curAudio.onerror=fin;curAudio.play().catch(fin);setTimeout(fin,15000);return;}
  if(!NTTS&&!('speechSynthesis'in window))return fin();
  if(!cheer&&!playOne._w){playOne._w=1;toast('🔈 קול ממוחשב – להגייה מדויקת הקליטו בהגדרות ← הקלטות');}
- if(NTTS){NTTS.speak({text:ttsFix(SPOKEN[t]||t),lang:'he-IL',rate:cheer?1.0:.85,pitch:cheer?1.25:1.0,volume:1.0}).then(fin,fin);setTimeout(fin,Math.max(4000,String(t).length*200));return;}
- const u=new SpeechSynthesisUtterance(ttsFix(SPOKEN[t]||t));u.lang='he-IL';u.rate=cheer?1.02:.8;u.pitch=cheer?1.3:1;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;
+ if(NTTS){NTTS.speak({text:ttsFix(cheer?ttsGender(SPOKEN[t]||t):(SPOKEN[t]||t)),lang:'he-IL',rate:cheer?1.0:.85,pitch:cheer?1.25:1.0,volume:1.0}).then(fin,fin);setTimeout(fin,Math.max(4000,String(t).length*200));return;}
+ const u=new SpeechSynthesisUtterance(ttsFix(cheer?ttsGender(SPOKEN[t]||t):(SPOKEN[t]||t)));u.lang='he-IL';u.rate=cheer?1.02:.8;u.pitch=cheer?1.3:1;const v=speechSynthesis.getVoices().find(v=>/he|iw/i.test(v.lang));if(v)u.voice=v;
  u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);setTimeout(fin,Math.max(3000,String(t).length*180));});}
 async function playSeq(list,cheer){const tok=++playTok;try{if(NTTS)NTTS.stop().catch(()=>{});else speechSynthesis.cancel();}catch(e){}if(curAudio){curAudio.pause();curAudio=null;}
  for(const t of list){if(!t)continue;if(tok!==playTok)return;await playOne(t,cheer,tok);}}
@@ -405,8 +408,9 @@ function buildQ(it){const k=kidById(curKid);const L=LEVELS[P.lvl];const n=P.qn=(
  else{const qs=qList(k);tpl=n===1||qs.length<2?qs[0]:rnd(qs.slice(1));}
  const pre=whatPre(L);it.q=fill(tpl,k,pre+sayName(it.o.name));it.short=it.o.cnt?'כמה יש?':'איפה '+pre+sayName(it.o.name)+'?';
  it.qHTML=esc(fill(tpl,k,'§')).replace('§',esc(pre)+'<b>'+esc(it.o.name)+'</b>');}
-function sayQ(L){if(L.id==='t1')return 'איזה צבע זה?';if(L.id==='t8')return 'איזה מספר זה?';if(L.id==='t9')return 'כמה יש?';if(L.w===2)return 'איזו אות זו?';return 'מה זה?';}
-function sayHTML(){const it=cur();const k=kidById(curKid);const L=LEVELS[P.lvl];if(!it.sq){const q=sayQ(L);it.sq=(P.idx===0?k.name+', ':'')+q;}
+function sayQ(L){return({t1:'איזה צבע זה',t2:'איזו צורה זו',t3:'איזו חיה זו',t4:'מה רואים בשמיים',t5:'איזה כלי תחבורה זה',t6:'איזה אוכל זה',t7:'מה זה',t8:'איזה מספר זה',t9:'כמה יש פה'})[L.id]||(L.w===2?'איזו אות זו':'מה זה');}
+function sayQFull(L,k,first){const q=sayQ(L);const v=first?['{שם}, '+q+'?']:['{שם}, '+q+'?',q+', {שם}?','ועכשיו {שם}, '+q+'?',G('בוא נראה {שם}, ','בואי נראה {שם}, ')+q+'?'];return fill(rnd(v),k);}
+function sayHTML(){const it=cur();const k=kidById(curKid);const L=LEVELS[P.lvl];if(!it.sq)it.sq=sayQFull(L,k,P.idx===0);
  return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 📖 אומרים לבד</div>
  <div class="card learn"><div class="lvis" style="margin:28px 0 22px">${it.pv?it.pv:it.o.show}</div><div class="tqt">${esc(it.sq)}</div><div class="lname" id="ans" style="display:none">${esc(it.o.name)}</div></div>
  <div class="heard" id="heard">${G('🎤 לחץ על המיקרופון ותגיד בקול','🎤 לחצי על המיקרופון ותגידי בקול')}</div>
@@ -487,12 +491,12 @@ let NSR_CUR=null,NSR_BOUND=false;
 const NSR_ERR={9:'not-allowed',6:'no-speech',7:'no-speech',1:'network',2:'network',4:'network',8:'aborted',5:'aborted',11:'aborted'};
 function bindNSR(){if(NSR_BOUND||!KS)return;NSR_BOUND=true;
  KS.addListener('result',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;c._emit(ev.matches||[],!!ev.final);});
- KS.addListener('error',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;c._err(NSR_ERR[ev.code]||'aborted');});
+ KS.addListener('error',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if([6,7,8].indexOf(ev.code)<0)toast('⚠️ מנוע הדיבור החזיר שגיאה (קוד '+ev.code+')');c._err(NSR_ERR[ev.code]||'aborted');});
  KS.addListener('rms',ev=>{const m=document.getElementById('mic');if(!m||!m.classList.contains('on'))return;const v=Math.max(0,Math.min(1,((ev.db||0)+2)/12));m.style.transform='scale('+(1+v*.22).toFixed(3)+')';m.style.filter='brightness('+(1+v*.35).toFixed(2)+')';});
  KS.addListener('state',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if(ev.state==='speech'&&P&&P.listening&&P.heard&&!P.heard.firstT)P.heard.firstT=performance.now();if(ev.state==='stopped')c._end();});}
 class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interimResults=true;this.maxAlternatives=5;this.sid=-2;this.finals=[];this.ended=false;}
  async start(){NSR_CUR=this;bindNSR();try{const p=await KS.ensurePermission();if(NSR_CUR!==this)return;if(!p||!p.granted){this._err('not-allowed');this._end();return;}
-  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?1100:(this.continuous?2200:1400),hints:this.hints||[],engine:S.settings.engine||'google'});this.sid=r&&r.sid;if(NSR_CUR!==this){try{KS.cancel().catch(()=>{});}catch(e){}}}catch(e){this._err('aborted');this._end();}}
+  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?1100:(this.continuous?2200:1400),hints:this.hints||[],engine:S.settings.engine2||'default'});this.sid=r&&r.sid;if(NSR_CUR!==this){try{KS.cancel().catch(()=>{});}catch(e){}}}catch(e){this._err('aborted');this._end();}}
  stop(){try{KS.stop().catch(()=>{});}catch(e){}}
  abort(){const was=NSR_CUR===this;this.ended=true;if(was){NSR_CUR=null;try{KS.cancel().catch(()=>{});}catch(e){}}}
  _emit(matches,fin){const alts=matches.map(t=>({transcript:t}));const res=this.finals.map(a=>{const x=a.slice();x.isFinal=true;return x;});const cur=alts.slice();cur.isFinal=fin;res.push(cur);if(fin)this.finals.push(alts);if(this.onresult)this.onresult({resultIndex:0,results:res});}
@@ -646,8 +650,8 @@ function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 י�
   <div class="hint">בשלבי ההברות (1–3) ההורה תמיד מאשר, כי זיהוי דיבור לא מדייק בהברות בודדות.</div>
   <div class="row" style="margin-top:14px"><b>🎧 הקשבה אוטומטית</b><span class="sp"></span><div class="seg" style="width:140px"><button class="${s.autoListen?'on':''}" onclick="setS('autoListen',true)">פועל</button><button class="${!s.autoListen?'on':''}" onclick="setS('autoListen',false)">כבוי</button></div></div>
   <div class="hint">אחרי שאלה או מילה חדשה – המיקרופון נפתח לבד, בלי ללחוץ.</div>
-  ${NAT?`<label class="f">🧠 מנוע זיהוי הדיבור</label><div class="seg"><button class="${(s.engine||'google')==='google'?'on':''}" onclick="setS('engine','google')">Google (מומלץ)</button><button class="${s.engine==='default'?'on':''}" onclick="setS('engine','default')">ברירת המחדל בטלפון</button></div>
-  <div class="hint">בסמסונג ברירת המחדל היא לפעמים המנוע של סמסונג, שפחות טוב בעברית. אם השמיעה לא טובה – נסו להחליף.</div><div class="hint" id="engInfo"></div>`:''}
+  ${NAT?`<label class="f">🧠 מנוע זיהוי הדיבור</label><div class="seg"><button class="${s.engine2!=='google'?'on':''}" onclick="setS('engine2','default')">ברירת המחדל בטלפון</button><button class="${s.engine2==='google'?'on':''}" onclick="setS('engine2','google')">Google (ניסיוני)</button></div>
+  <div class="hint">אם השמיעה לא טובה אפשר לנסות את המנוע של Google. אם הוא לא עובד בטלפון – האפליקציה חוזרת לבד לברירת המחדל.</div><div class="hint" id="engInfo"></div>`:''}
   <label class="f">כמה שניות לתת לילד לענות</label><input class="in" type="number" min="3" max="20" value="${s.answerSec}" onchange="setS('answerSec',Math.min(20,Math.max(3,+this.value||6)))">
   <label class="f">אחוז הצלחה באימון כדי שייחשב "אימון טוב"</label><input class="in" type="number" min="50" max="100" value="${s.threshold}" onchange="setS('threshold',Math.min(100,Math.max(50,+this.value||85)))">
   <label class="f">כמה אימונים טובים ברצף כדי לעלות שלב</label><input class="in" type="number" min="1" max="10" value="${s.sessionsToPass}" onchange="setS('sessionsToPass',Math.min(10,Math.max(1,+this.value||3)))">
