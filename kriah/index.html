@@ -133,7 +133,7 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 .tile:active{transform:translateY(3px)}
 .tile.right{background:#d4f5e4;box-shadow:0 6px 0 #9fe0bd;animation:pop .45s}.tile.wrong{opacity:.3;animation:shake .4s}
 .dot{display:inline-block;width:74px;height:74px;border-radius:50%;border:3px solid rgba(0,0,0,.1)}
-.shp{width:80px;height:80px}.emo{font-size:60px;line-height:1}.pic{width:100px;height:100px;object-fit:contain;display:block}.dig{font-size:64px;font-weight:800;color:var(--pri)}
+.shp{width:80px;height:80px}.emo{font-size:60px;line-height:1}.pic{width:100px;height:100px;object-fit:contain;display:block;margin:0 auto}.lvis{display:flex;flex-direction:column;justify-content:center;align-items:center}.mic:not(.on){transform:none!important;filter:none!important}.dig{font-size:64px;font-weight:800;color:var(--pri)}
 .let{font-family:'Frank Ruhl Libre',serif;font-size:74px;font-weight:700;color:var(--pri);line-height:1}
 .cntv{font-size:44px;letter-spacing:6px;line-height:1.35;max-width:320px}
 .learn{text-align:center;padding:26px 16px;cursor:pointer}.lvis{transform:scale(1.7);margin:34px 0 30px}.lname{font-family:'Frank Ruhl Libre',serif;font-size:50px;font-weight:700}
@@ -434,7 +434,7 @@ function sayKey(){return P?(P.learn?'L'+P.li:'Q'+P.idx)+'|'+P.attempts:'';}
 function sayListen(o,isLearn,auto){if(SAY){if(!auto)SAY.stop();return;}
  if(!CAN_LISTEN()||(P&&P.micDenied)){if(!auto)toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתור');return;}
  const L=P&&P.lvl!==undefined?LEVELS[P.lvl]:null;const t0=Date.now(),win=(S.settings.answerSec||6)*1000;const alts=new Set();let hit=false,stopped=false,dead=false,rec=null;
- const ui=on=>{const m=$('mic');if(m){m.classList.toggle('on',on);m.textContent=on?'⏹':'🎤';}};
+ const ui=on=>{const m=$('mic');if(m){m.classList.toggle('on',on);m.textContent=on?'⏹':'🎤';if(!on){m.style.transform='';m.style.filter='';}}};
  const tick=setInterval(()=>{if(!alts.size&&$('heard')){const left=Math.max(0,Math.ceil((win-(Date.now()-t0))/1000));$('heard').textContent=G('🎧 מקשיב... תגיד בקול (','🎧 מקשיב... תגידי בקול (')+left+')';}},250);
  const ctl={stop(){stopped=true;try{rec&&rec.stop();}catch(e){}},abort(){dead=true;stopped=true;clearInterval(tick);clearTimeout(timer);try{rec&&rec.abort();}catch(e){}if(SAY===ctl)SAY=null;REC=null;ui(false);}};
  SAY=ctl;ui(true);if($('fb'))$('fb').innerHTML='';
