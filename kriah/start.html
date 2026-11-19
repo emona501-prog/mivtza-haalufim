@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6c4cf1">
+<title>קוראים בכיף – אפליקציית קריאה לילדים</title>
+<meta name="description" content="אפליקציה שמלמדת ילדים לקרוא – מגיל 3 ועד קריאת סיפור שלם. האפליקציה מקשיבה, מעודדת ומחלקת פרסים.">
+<meta property="og:title" content="קוראים בכיף 📚 – אפליקציית קריאה לילדים">
+<meta property="og:description" content="מגיל 3 ועד קריאת סיפור שלם: צבעים, אותיות, ניקוד ומשפטים. האפליקציה מקשיבה לילד, מעודדת אותו ומחלקת פרסים.">
+<meta property="og:image" content="https://emona501-prog.github.io/mivtza-haalufim/kriah/icons/icon-512.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+@font-face{font-family:Rubik;font-weight:400;src:url(fonts/rubik-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:400;src:url(fonts/rubik-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:Rubik;font-weight:700;src:url(fonts/rubik-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+FB1D-FB4F}
+@font-face{font-family:Rubik;font-weight:700;src:url(fonts/rubik-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+@font-face{font-family:Rubik;font-weight:800;src:url(fonts/rubik-hebrew-800-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+FB1D-FB4F}
+@font-face{font-family:Frank;font-weight:700;src:url(fonts/frank-ruhl-libre-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+FB1D-FB4F}
+*{box-sizing:border-box}
+body{margin:0;font-family:Rubik,system-ui,sans-serif;color:#2d2350;background:linear-gradient(180deg,#fff7e8 0%,#f1ebff 100%);min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:26px 18px 50px;text-align:center}
+.icon{width:132px;height:132px;border-radius:30px;box-shadow:0 12px 30px rgba(80,50,160,.25);display:block;margin:6px auto 14px}
+h1{font-size:34px;font-weight:800;margin:0;color:#6c4cf1}
+.sub{font-size:17px;margin:6px 0 20px;line-height:1.55}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 24px;text-align:right}
+.feat div{background:#fff;border-radius:18px;padding:12px;box-shadow:0 4px 16px rgba(80,50,160,.08);font-size:14px;line-height:1.45}
+.feat b{display:block;font-size:15px;margin-bottom:2px}
+.box{background:#fff;border-radius:24px;padding:18px;box-shadow:0 6px 22px rgba(80,50,160,.12);margin-bottom:14px;text-align:right}
+.box.me{outline:3px solid #6c4cf1}
+.box h2{margin:0 0 4px;font-size:21px}
+.mut{color:#6f6990;font-size:14px;line-height:1.5}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border-radius:18px;padding:15px;font-size:18px;font-weight:700;text-decoration:none;margin-top:12px;color:#fff;background:#1fb26b;box-shadow:0 6px 0 #138a50}
+.btn.pri{background:#6c4cf1;box-shadow:0 6px 0 #4b30c4}
+.btn.off{background:#e9e5f5;color:#8a84a3;box-shadow:none;pointer-events:none}
+ol{margin:10px 0 0;padding-inline-start:22px;font-size:15px;line-height:1.7}
+.tag{display:inline-block;background:#fff4d6;color:#a06800;border-radius:10px;padding:2px 9px;font-size:12px;font-weight:700;margin-inline-start:6px;vertical-align:middle}
+footer{margin-top:26px;font-size:13px;color:#8a84a3}footer a{color:#6c4cf1}
+</style>
+</head>
+<body><main>
+<img class="icon" src="icons/icon-512.png" alt="">
+<h1>קוראים בכיף</h1>
+<div class="sub">אפליקציה שמלמדת ילדים לקרוא – מגיל 3 ועד קריאת סיפור שלם.<br>היא מקשיבה, מעודדת בשם של הילד, ומחלקת פרסים 🎁</div>
+
+<div class="feat">
+ <div><b>🧸 מגיל 3</b>צבעים, צורות, חיות, מספרים ואותיות</div>
+ <div><b>🎵 ניקוד וקריאה</b>הברות, מילים, משפטים וסיפור</div>
+ <div><b>🎤 מקשיבה לילד</b>בודקת כל מילה לפי הניקוד</div>
+ <div><b>📊 דוח להורים</b>מה הילד יודע ומה כדאי לחזק</div>
+</div>
+
+<div class="box" id="android">
+ <h2>📱 אנדרואיד</h2>
+ <div class="mut">טלפונים של סמסונג, שיאומי, פיקסל וכל טלפון אנדרואיד אחר.</div>
+ <a class="btn pri" id="playBtn" href="#">▶ להורדה מ־Google Play</a>
+ <a class="btn" href="https://github.com/emona501-prog/kriah-befun/releases/latest/download/kriah-befun.apk">⬇ הורדה ישירה (קובץ APK)</a>
+ <div class="mut" style="margin-top:8px">בהורדה ישירה הטלפון עשוי לבקש לאשר "התקנה ממקור לא ידוע".</div>
+</div>
+
+<div class="box" id="iphone">
+ <h2>🍎 אייפון <span class="tag">גרסת אינטרנט</span></h2>
+ <div class="mut">באייפון האפליקציה נפתחת מהדפדפן, ואפשר להוסיף אותה למסך הבית כמו אפליקציה רגילה.</div>
+ <a class="btn pri" href="./">🍎 לפתיחת האפליקציה</a>
+ <ol>
+  <li>פותחים את הקישור בדפדפן <b>ספארי</b>.</li>
+  <li>לוחצים על כפתור השיתוף <b>⬆️</b> בתחתית המסך.</li>
+  <li>בוחרים <b>"הוספה למסך הבית"</b>.</li>
+  <li>בפעם הראשונה שלוחצים על 🎤 – מאשרים גישה למיקרופון.</li>
+ </ol>
+</div>
+
+<footer>חי אפליקציות 💙 · <a href="privacy.html">מדיניות פרטיות</a> · <a href="https://wa.me/972546137202">צרו קשר בוואטסאפ</a></footer>
+</main>
+<script>
+/* כשהאפליקציה תעלה לחנות – להדביק כאן את הקישור שלה */
+const PLAY_URL='';
+const b=document.getElementById('playBtn');
+if(PLAY_URL){b.href=PLAY_URL;}else{b.textContent='⏳ בקרוב ב־Google Play';b.classList.add('off');b.removeAttribute('href');}
+const ua=navigator.userAgent;const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const me=document.getElementById(ios?'iphone':/Android/.test(ua)?'android':'');
+if(me){me.classList.add('me');me.parentNode.insertBefore(me,document.getElementById('android'));}
+</script>
+</body></html>

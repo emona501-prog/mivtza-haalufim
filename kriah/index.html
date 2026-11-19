@@ -10,7 +10,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="קוראים בכיף">
 <title>קוראים בכיף – חי אפליקציות</title>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">
+<style>/* גופנים בתוך האפליקציה – עובד גם בלי אינטרנט (רישיון OFL) */
+@font-face{font-family:'Rubik';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/rubik-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0307-0308,U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/rubik-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/rubik-hebrew-500-normal.woff2) format('woff2');unicode-range:U+0307-0308,U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/rubik-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/rubik-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0307-0308,U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/rubik-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:800;font-display:swap;src:url(fonts/rubik-hebrew-800-normal.woff2) format('woff2');unicode-range:U+0307-0308,U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:800;font-display:swap;src:url(fonts/rubik-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Frank Ruhl Libre';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/frank-ruhl-libre-hebrew-500-normal.woff2) format('woff2');unicode-range:U+0307-0308,U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:'Frank Ruhl Libre';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/frank-ruhl-libre-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Frank Ruhl Libre';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/frank-ruhl-libre-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0307-0308,U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+@font-face{font-family:'Frank Ruhl Libre';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/frank-ruhl-libre-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style>
 <style>
 :root{--pri:#6c4cf1;--pri2:#9b7bff;--ok:#1fb26b;--bad:#ff5d6c;--warn:#ffa41b;--txt:#2d2350;--mut:#8a84a3;--sh:0 6px 22px rgba(80,50,160,.13);--r:22px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -162,6 +174,7 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 <script>
 /* ================= קוראים בכיף – חי אפליקציות ================= */
 const APP_VER='__APP_VERSION__';
+const STORE_BUILD=false; /* בגרסת החנות הופך ל-true: בלי עדכון עצמי */
 const NAT=(()=>{try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()?C:null;}catch(e){return null;}})();
 function natP(n){try{if(!NAT)return null;NAT.Plugins=NAT.Plugins||{};if(NAT.Plugins[n])return NAT.Plugins[n];if(NAT.registerPlugin){const p=NAT.registerPlugin(n);NAT.Plugins[n]=p;return p;}}catch(e){}return null;}
 const KS=natP('KriahSpeech'),NTTS=natP('TextToSpeech'),UPD=natP('Updater');
@@ -872,7 +885,8 @@ function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 י�
   <label class="f">מה להקליט?</label><select class="in" onchange="recSrc=this.value;drawRecList()">${LEVELS.map((L,i)=>`<option value="L${i}" ${recSrc==='L'+i?'selected':''}>שלב ${i+1} – ${L.title.replace(NQ,'')}</option>`).join('')}${S.books.map(b=>`<option value="B${b.id}" ${recSrc==='B'+b.id?'selected':''}>📚 ${esc(b.name)}</option>`).join('')}${S.kids.map(k=>`<option value="K${k.id}" ${recSrc==='K'+k.id?'selected':''}>🎉 קריאות עידוד – ${esc(k.name)}</option>`).join('')}</select></div>
   <div class="card" id="recList"><div class="mut">טוען...</div></div><div class="hint">💡 ההקלטות נשמרות במכשיר הזה בלבד (לא נכללות בקובץ הגיבוי).</div>`;setTimeout(drawRecList,0);}
  else if(setTab==='more'){h+=`<div class="card"><label class="f">🔒 שינוי קוד הורים</label><div class="row"><input class="in" id="newPin" type="password" inputmode="numeric" placeholder="קוד חדש"><button class="btn sm" onclick="chgPin()">שמירה</button></div></div>
-  ${NAT?`<div class="card"><div class="row"><b>📲 גרסה ${esc(APP_VER)}</b><span class="sp"></span><button class="btn sm" onclick="checkUpdate(true)">בדיקת עדכונים</button></div></div>`:''}
+  ${NAT?`<div class="card"><div class="row"><b>📲 גרסה ${esc(APP_VER)}</b><span class="sp"></span>${STORE_BUILD?'':`<button class="btn sm" onclick="checkUpdate(true)">בדיקת עדכונים</button>`}</div></div>`:''}
+  <div class="card"><div class="row"><b>🔒 פרטיות</b><span class="sp"></span><a class="btn sm ghost" href="https://emona501-prog.github.io/mivtza-haalufim/kriah/privacy.html" target="_blank" rel="noopener">מדיניות פרטיות</a></div><div class="hint">כל המידע נשמר רק בטלפון הזה. אין פרסומות ואין איסוף מידע.</div></div>
   <div class="card"><b>💾 גיבוי</b><div class="hint">שמירת כל הנתונים (ילדים, תמונות, ספרים, נקודות) לקובץ – ושחזור ממנו.</div><div class="row" style="margin-top:10px"><button class="btn sm" onclick="exportData()">⬇️ ייצוא גיבוי</button><label class="btn sm ghost" style="margin:0">⬆️ שחזור<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label></div></div>`;}
  return h+`<div class="foot">חי אפליקציות © · קוראים בכיף</div>`;}
 let recSrc='L0',MR=null,recKey=null;
@@ -972,7 +986,7 @@ if(!NAT&&'serviceWorker'in navigator&&location.protocol==='https:')navigator.ser
 /* --- עדכונים מתוך האפליקציה --- */
 const REL_API='https://api.github.com/repos/emona501-prog/kriah-befun/releases/latest';
 const verGt=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){if((x[i]||0)>(y[i]||0))return true;if((x[i]||0)<(y[i]||0))return false;}return false;};
-async function checkUpdate(manual){if(!NAT||APP_VER.startsWith('__'))return manual&&toast('בדיקת עדכונים עובדת רק באפליקציה המותקנת');
+async function checkUpdate(manual){if(STORE_BUILD)return manual&&toast('עדכונים מגיעים דרך חנות Google Play');if(!NAT||APP_VER.startsWith('__'))return manual&&toast('בדיקת עדכונים עובדת רק באפליקציה המותקנת');
  try{const r=await fetch(REL_API,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();const v=String(j.tag_name||'').replace(/^v/,'');const a=(j.assets||[]).find(x=>/\.apk$/i.test(x.name));
   if(!v||!a||!verGt(v,APP_VER)){if(manual)toast('✅ יש לך את הגרסה האחרונה ('+APP_VER+')');return;}
   modal(`<h3 style="margin-top:0">🎁 גרסה חדשה: ${esc(v)}</h3><div class="mut" style="white-space:pre-line;max-height:40vh;overflow:auto">${esc((j.body||'').replace(/[#*`]/g,''))}</div>
