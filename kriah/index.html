@@ -56,7 +56,7 @@ input,select,textarea{font-family:inherit;font-size:16px}
 .lvl.done .num{background:#d4f5e4}
 .lvl.cur{outline:3px solid var(--pri);}
 .lvl.cur .num{background:var(--pri);color:#fff;animation:pulse 1.6s infinite}
-.lvl.lock{opacity:.5}
+.lvl.lock{opacity:.55}.lvl.open .num{background:#f0ecfb}
 .lvl .t{font-weight:700;font-size:16px}
 .lvl .d{font-size:13px;color:var(--mut)}
 .dots{display:flex;gap:4px;margin-top:4px}
@@ -380,14 +380,21 @@ function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goal
  <button class="btn ok full" style="font-size:20px;padding:18px" onclick="startLevel(${Math.min(k.level,LEVELS.length-1)})">▶️ התחל לקרוא</button>
  ${S.books.length?`<button class="btn ghost full" style="margin-top:14px" onclick="chooseBook()">📚 לקרוא מהספרים שלי</button>`:''}`;
  let w=0;LEVELS.forEach((L,i)=>{if(L.w!==w){w=L.w;html+=`<div class="world">${WORLDS[w].emo} ${WORLDS[w].name}</div>`;}
-  const st=i<k.level?'done':i===k.level?'cur':'lock';
-  html+=`<button class="lvl ${st}" ${st==='lock'?'disabled':''} onclick="startLevel(${i})"><div class="num">${st==='done'?'✅':st==='lock'?'🔒':L.emo}</div><div class="sp"><div class="t">שלב ${i+1} · ${esc(L.title)}</div><div class="d">${esc(L.desc)}</div>
+  const st=i<k.level?'done':i===k.level?'cur':S.settings.openAll?'open':'lock';
+  html+=`<button class="lvl ${st}" onclick="${st==='lock'?`unlockLvl(${i})`:`startLevel(${i})`}"><div class="num">${st==='done'?'✅':st==='lock'?'🔒':L.emo}</div><div class="sp"><div class="t">שלב ${i+1} · ${esc(L.title)}</div><div class="d">${esc(L.desc)}</div>
   ${st==='cur'?`<div class="dots">${Array.from({length:S.settings.sessionsToPass},(_,j)=>`<b class="${j<(k.streak||0)?'on':''}"></b>`).join('')}</div>`:''}</div></button>`;});
  if(k.level>=LEVELS.length)html+=`<div class="card" style="text-align:center"><div style="font-size:50px">🏆</div><b>${G('סיימת את כל השלבים! אלוף אמיתי!','סיימת את כל השלבים! אלופה אמיתית!')}</b></div>`;
  return html;}
 
 /* ================= אימון ================= */
 function setMode(m){const k=kidById(curKid);k.mode=m;save();SND.tap();render();}
+function unlockLvl(i){const L=LEVELS[i];modal(`<h3 style="margin-top:0">🔒 שלב ${i+1} · ${esc(L.title)}</h3>
+ <div class="mut">השלב ייפתח לבד אחרי שמצליחים בשלב הנוכחי. הורה יכול לפתוח אותו עכשיו עם קוד ההורים${S.pin==='1234'?' (קוד התחלתי: 1234)':''}.</div>
+ <input class="in" id="ulPin" type="password" inputmode="numeric" style="margin:12px 0;font-size:24px;text-align:center;letter-spacing:8px" onkeydown="if(event.key==='Enter')ulGo(${i})">
+ <button class="btn ok full" onclick="ulGo(${i})">🔓 לתרגל את השלב הזה</button>
+ <button class="btn ghost full" style="margin-top:10px" onclick="ulGo(${i},1)">⏩ להעביר את הילד לשלב הזה</button>
+ <div class="hint" style="margin-top:10px">💡 בהגדרות ← קריאה אפשר לבחור "כל השלבים פתוחים".</div>`);setTimeout(()=>$('ulPin')&&$('ulPin').focus(),100);}
+function ulGo(i,move){if($('ulPin').value!==S.pin){$('ulPin').classList.add('shake');toast('קוד שגוי');return;}closeModal();if(move){const k=kidById(curKid);k.level=i;k.streak=0;save();}startLevel(i);}
 function lengthN(n){return Math.max(1,Math.round(n*S.settings.length));}
 const nameOf=x=>typeof x==='string'?x:x.name;
 function startLevel(i){const k=kidById(curKid);const L=LEVELS[i];if(!L)return;if(k.mode==='game'&&!P_forceRead)return startGame(i);const names=L.items.map(nameOf);
@@ -797,6 +804,8 @@ function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 י�
   <label class="f">כמה שניות לתת לילד לענות</label><input class="in" type="number" min="3" max="20" value="${s.answerSec}" onchange="setS('answerSec',Math.min(20,Math.max(3,+this.value||6)))">
   <label class="f">אחוז הצלחה באימון כדי שייחשב "אימון טוב"</label><input class="in" type="number" min="50" max="100" value="${s.threshold}" onchange="setS('threshold',Math.min(100,Math.max(50,+this.value||85)))">
   <label class="f">כמה אימונים טובים ברצף כדי לעלות שלב</label><input class="in" type="number" min="1" max="10" value="${s.sessionsToPass}" onchange="setS('sessionsToPass',Math.min(10,Math.max(1,+this.value||3)))">
+  <div class="row" style="margin-top:14px"><b>🔓 כל השלבים פתוחים</b><span class="sp"></span><div class="seg" style="width:140px"><button class="${s.openAll?'on':''}" onclick="setS('openAll',true)">כן</button><button class="${!s.openAll?'on':''}" onclick="setS('openAll',false)">לא</button></div></div>
+  <div class="hint">"כן" – הילד יכול להיכנס לכל שלב. "לא" – שלב נפתח אחרי הצלחה בשלב הקודם (הורה יכול לפתוח עם הקוד).</div>
   <label class="f">אורך אימון</label><div class="seg">${[[.6,'קצר'],[1,'רגיל'],[1.5,'ארוך']].map(o=>`<button class="${s.length===o[0]?'on':''}" onclick="setS('length',${o[0]})">${o[1]}</button>`).join('')}</div></div>
   <div class="card"><b>🖍️ סימון המילים בזמן הקריאה</b><div class="hint">במשפטים וסיפורים מופיע סימון צהוב שרץ על המילים.</div>
   <div class="seg" style="margin-top:8px"><button class="${s.markMode==='follow'?'on':''}" onclick="setS('markMode','follow')">👣 עוקב אחרי הילד</button><button class="${s.markMode==='guide'?'on':''}" onclick="setS('markMode','guide')">🚦 מוביל את הילד</button></div>
