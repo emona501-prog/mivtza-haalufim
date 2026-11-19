@@ -128,6 +128,7 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 .warnbox{background:#fff3d6;border-radius:16px;padding:10px 12px;font-size:13px;margin-bottom:12px;color:#7a5200}
 .tq{background:#fff;border-radius:26px;padding:16px;box-shadow:var(--sh);text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
 .tqt{font-size:24px;font-weight:700;line-height:1.5}.tqt b{font-family:'Frank Ruhl Libre',serif;color:var(--pri);font-size:32px}
+.gtiles{display:grid;gap:8px;margin-top:12px}.gtile{background:#fff;border-radius:16px;box-shadow:0 4px 0 #e4ddf7,var(--sh);display:flex;align-items:center;justify-content:center;padding:6px;min-height:64px;font-family:'Frank Ruhl Libre',Rubik,serif;font-weight:700;color:var(--txt);line-height:1.4;text-align:center}.gtile:active{transform:translateY(2px)}.gtile.right{background:#d4f5e4;box-shadow:0 4px 0 #9fe0bd;animation:pop .45s}.gtile.wrong{opacity:.25;animation:shake .4s}.gtile .pic{width:100%;height:auto;max-width:110px}.gtile .let{font-size:inherit}.gtile .dot{width:100%;max-width:70px;height:auto;aspect-ratio:1}.gtile .shp{width:100%;max-width:80px;height:auto}.gtile .emo{font-size:inherit}.gtile .dig{font-size:inherit}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.tiles.four{grid-template-columns:1fr 1fr}
 .tile{background:#fff;border-radius:24px;min-height:120px;box-shadow:0 6px 0 #e4ddf7,var(--sh);display:flex;align-items:center;justify-content:center;padding:8px}
 .tile:active{transform:translateY(3px)}
@@ -137,6 +138,11 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 .let{font-family:'Frank Ruhl Libre',serif;font-size:74px;font-weight:700;color:var(--pri);line-height:1}
 .cntv{font-size:44px;letter-spacing:6px;line-height:1.35;max-width:320px}
 .learn{text-align:center;padding:26px 16px;cursor:pointer}.lvis{transform:scale(1.7);margin:34px 0 30px}.lname{font-family:'Frank Ruhl Libre',serif;font-size:50px;font-weight:700}
+.rbar{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:14px}.rbar .lb{width:108px;flex-shrink:0;font-weight:600}.rbar .tr{flex:1;height:14px;background:#efecf7;border-radius:4px;overflow:hidden}.rbar .tr i{display:block;height:100%;border-radius:0 4px 4px 0}.rbar .vl{width:74px;text-align:left;font-weight:700;color:var(--txt);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:#f5f2ff;border-radius:12px;padding:5px 10px;margin:3px;font-size:14px}.chip.bad{background:#fdecec}.chip.ok{background:#e5f6e5}
+.sum p{margin:8px 0;line-height:1.6}.disc{background:#f3f1f8;border-radius:14px;padding:10px 12px;font-size:12.5px;color:var(--mut);line-height:1.5}
+.spark{position:relative}.spark .tip{position:absolute;background:#2d2350;color:#fff;font-size:12px;padding:4px 8px;border-radius:8px;pointer-events:none;white-space:nowrap;transform:translate(-50%,-120%);display:none}
+.repban{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#efe9ff,#fff4d6);border-radius:18px;padding:12px 14px;margin-bottom:12px;box-shadow:var(--sh);width:100%;text-align:right;color:var(--txt);font-size:15px}
 .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:26px}
 </style>
 </head>
@@ -344,16 +350,18 @@ function goalLabel(k){const u=S.settings.goalType==='minutes'?'דקות':'נקו
 /* ================= מסך בית ================= */
 let view='home',curKid=null,P=null,setTab='kids';
 function render(){stopRec();const a=$('app');
- if(view==='home')a.innerHTML=homeHTML();else if(view==='kid')a.innerHTML=kidHTML();else if(view==='practice'){a.innerHTML=practiceHTML();
-  if(P&&P.learn){if(P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);else{const key=sayKey();const o=P.learnItems[P.li];setTimeout(()=>{if(view==='practice'&&P&&P.learn&&sayKey()===key)playItem(learnQ(),true).then(()=>autoSay(o,true,150));},450);}}
+ if(view==='home')a.innerHTML=homeHTML();else if(view==='kid')a.innerHTML=kidHTML();else if(view==='practice'){a.innerHTML=practiceHTML();if(P&&!P.learn&&(P._qi!==P.idx)){P._qi=P.idx;P.qT=Date.now();}
+  if(P&&cur()&&cur().type==='game'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&sayKey()===key)playItem(cur().q,true);},450);}
+  else if(P&&P.learn){if(P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);else{const key=sayKey();const o=P.learnItems[P.li];setTimeout(()=>{if(view==='practice'&&P&&P.learn&&sayKey()===key)playItem(learnQ(),true).then(()=>autoSay(o,true,150));},450);}}
   else if(P&&cur().type==='tap'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key){if(P.mode==='listen')playItem(cur().q,true);else askAndListen();}},450);}
   else if(P&&P.mode!=='listen'&&!isParentMode(cur())&&S.settings.autoListen){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)micTap();},900);}
-  else if(P&&P.mode==='listen'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.listening&&sayKey()===key)playItem(cur().text).then(()=>{if(S.settings.autoListen&&!isParentMode(cur())&&view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)setTimeout(()=>micTap(),300);});},450);}}else if(view==='wheel'){a.innerHTML=wheelHTML();drawWheel(0);}else if(view==='settings')a.innerHTML=settingsHTML();
+  else if(P&&P.mode==='listen'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.listening&&sayKey()===key)playItem(cur().text).then(()=>{if(S.settings.autoListen&&!isParentMode(cur())&&view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)setTimeout(()=>micTap(),300);});},450);}}else if(view==='wheel'){a.innerHTML=wheelHTML();drawWheel(0);}else if(view==='settings')a.innerHTML=settingsHTML();else if(view==='report')a.innerHTML=reportHTML();
  window.scrollTo(0,0);}
 function go(v){view=v;render();}
 function homeHTML(){const sr=!!SRC;
  return `<div class="top"><div class="brand">📚 קוראים בכיף<small>חי אפליקציות</small></div><div class="row" style="gap:8px">${installEvt?`<button class="ibtn" onclick="doInstall()">📲 התקנה</button>`:''}<button class="ibtn" onclick="openSettings()">⚙️ הורים</button></div></div>
  ${!window.isSecureContext?`<div class="warnbox">⚠️ <b>הקובץ פתוח ישירות מהטלפון</b> – במצב הזה הדפדפן חוסם את המיקרופון, והמערכת לא יכולה להקשיב. כדי שההקשבה תעבוד צריך להעלות את הקובץ לנטליפיי ולפתוח את הקישור ב-Chrome. בינתיים: הסימון ירוץ בקצב קבוע וההורה מאשר.</div>`:sr?'':`<div class="warnbox">⚠️ הדפדפן הזה לא תומך בזיהוי דיבור. האפליקציה תעבוד במצב "אישור הורה". מומלץ לפתוח ב-Chrome.</div>`}
+ ${S.kids.filter(k=>k.repNew).map(k=>`<button class="repban" onclick="pendRep='${k.id}';openSettings()">${avatar(k,'sm')}<div class="sp"><b>📊 סיכום חדש על ${esc(k.name)}</b><div class="mut" style="font-size:13px">${G('','')}עלה שלב – לחצו לצפייה בדוח (להורים)</div></div></button>`).join('')}
  <div class="hero"><div style="font-size:54px">📖✨</div><h2>מי קורא היום?</h2><div class="mut">בחרו ילד והתחילו לקרוא</div></div>
  <div class="kids">${S.kids.map(k=>`<div class="kid" onclick="openKid('${k.id}')">${avatar(k)}<div class="kname">${esc(k.name)}</div><div class="kmeta">שלב ${k.level+1}: ${esc(LEVELS[Math.min(k.level,LEVELS.length-1)].title)}</div><div class="pts">⭐ ${k.points||0}</div></div>`).join('')}
  <button class="addkid" onclick="openSettings('kids',true)"><span style="font-size:40px">＋</span>הוספת ילד</button></div>
@@ -366,8 +374,9 @@ function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goal
  <div class="hero">${avatar(k,'lg')}<h2>שלום ${esc(k.name)}! 👋</h2><div class="mut">${rnd([G('מוכן לקרוא היום?','מוכנה לקרוא היום?'),G('בוא נשבור שיא!','בואי נשבור שיא!'),'כל מילה מקרבת אותך לפרס 🎁'])}</div></div>
  <div class="card"><div class="row"><b>🎯 היעד שלי</b><span class="sp"></span><span class="mut">${goalLabel(k)}</span></div><div class="bar"><i style="width:${goalPct(k)}%"></i></div>
  ${gr?`<button class="btn warn full pop" style="margin-top:10px" onclick="go('wheel')">${G('🎡 הגעת ליעד! סובב את גלגל המזל','🎡 הגעת ליעד! סובבי את גלגל המזל')}</button>`:`<div class="mut">כשמגיעים ליעד – מסובבים את גלגל המזל 🎡</div>`}</div>
- <div class="seg" style="margin-bottom:12px"><button class="${k.mode!=='listen'?'on':''}" onclick="setMode('read')">📖 אני קורא לבד</button><button class="${k.mode==='listen'?'on':''}" onclick="setMode('listen')">👂 שומע וחוזר</button></div>
- <div class="hint" style="margin:-6px 0 12px;text-align:center">${k.mode==='listen'?'👂 האפליקציה אומרת – והילד מוצא או חוזר אחריה':'📖 הילד אומר בעצמו – והמערכת מקשיבה ובודקת'}</div>
+ <div class="seg" style="margin-bottom:12px"><button class="${k.mode!=='listen'?'on':''}" onclick="setMode('read')">📖 אני קורא לבד</button><button class="${k.mode==='listen'?'on':''}" onclick="setMode('listen')">👂 שומע וחוזר</button><button class="${k.mode==='game'?'on':''}" onclick="setMode('game')">🧩 שינון וחשיבה</button></div>
+ ${k.mode==='game'?`<div class="seg" style="margin:-4px 0 12px">${[[1,'🙂 קל'],[2,'😎 בינוני'],[3,'🔥 קשה']].map(o=>`<button class="${(k.gameLvl||1)===o[0]?'on':''}" onclick="kidById(curKid).gameLvl=${o[0]};save();render()">${o[1]}</button>`).join('')}</div>`:''}
+ <div class="hint" style="margin:-6px 0 12px;text-align:center">${k.mode==='listen'?'👂 האפליקציה אומרת – והילד מוצא או חוזר אחריה':k.mode==='game'?'🧩 האפליקציה שואלת "איפה...?" – והילד מחפש ומקיש. ככל שהרמה קשה יותר, יש יותר אפשרויות דומות':'📖 הילד אומר בעצמו – והמערכת מקשיבה ובודקת'}</div>
  <button class="btn ok full" style="font-size:20px;padding:18px" onclick="startLevel(${Math.min(k.level,LEVELS.length-1)})">▶️ התחל לקרוא</button>
  ${S.books.length?`<button class="btn ghost full" style="margin-top:14px" onclick="chooseBook()">📚 לקרוא מהספרים שלי</button>`:''}`;
  let w=0;LEVELS.forEach((L,i)=>{if(L.w!==w){w=L.w;html+=`<div class="world">${WORLDS[w].emo} ${WORLDS[w].name}</div>`;}
@@ -381,12 +390,47 @@ function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goal
 function setMode(m){const k=kidById(curKid);k.mode=m;save();SND.tap();render();}
 function lengthN(n){return Math.max(1,Math.round(n*S.settings.length));}
 const nameOf=x=>typeof x==='string'?x:x.name;
-function startLevel(i){const k=kidById(curKid);const L=LEVELS[i];if(!L)return;const names=L.items.map(nameOf);
+function startLevel(i){const k=kidById(curKid);const L=LEVELS[i];if(!L)return;if(k.mode==='game'&&!P_forceRead)return startGame(i);const names=L.items.map(nameOf);
  const pre=L.id+'|';const mist=Object.keys(k.mist||{}).filter(x=>x.startsWith(pre)).map(x=>x.slice(pre.length)).filter(t=>names.includes(t));
  const n=Math.min(lengthN(L.n),names.length);const pick=shuffle(mist).slice(0,Math.ceil(n/2));
  shuffle(names).forEach(t=>{if(pick.length<n&&!pick.includes(t))pick.push(t);});
  const learn=L.type==='tap'&&!(k.history||[]).some(h=>h.lid===L.id);
  beginSession({lvl:i,learn,li:0,learnItems:L.items.slice(0,12),items:shuffle(pick).map(t=>mkItem(L,t,pre))});}
+let P_forceRead=false;
+/* ================= משחק "שינון וחשיבה": איפה...? מתוך הרבה אפשרויות ================= */
+const GAME_POOL={n1:['n1','n2','n3'],n2:['n1','n2','n3'],n3:['n1','n2','n3'],n4:['n4','n5'],n5:['n4','n5'],n6:['n6','n7'],n7:['n6','n7'],s1:['s1','s2'],s2:['s1','s2'],s3:['s1','s2']};
+function gameN(L,g){const t=L.type;if(t==='tap'){const m=L.items.length;return Math.min(m,[0,4,6,9][g]);}if(t==='syll')return[0,6,12,20][g];if(t==='word')return[0,4,9,12][g];if(t==='phrase')return[0,3,5,6][g];return[0,3,4,5][g];}
+function txtSim(a,b){const x=norm(a).replace(/\s/g,''),y=norm(b).replace(/\s/g,'');let s=0;if(x[0]===y[0])s+=2;if(x===y)s+=3;s-=lev(x,y)*.4;return s;}
+function startGame(i){const k=kidById(curKid);const L=LEVELS[i];const g=k.gameLvl||1;const pre=L.id+'|';
+ let pool;if(L.type==='tap'){pool=L.items.map(o=>({key:pre+o.name,name:o.name,show:o.show,cnt:o.cnt,say:sayName(o.name)}));if(L.id==='t9')pool=NUMN.map((n,j)=>({key:pre+n,name:n,show:DG(j+1),cnt:j+1,say:sayName(n)}));}
+ else{const ids=GAME_POOL[L.id]||[L.id];pool=[];ids.forEach(id=>{const LL=LEVELS.find(x=>x.id===id);LL.items.forEach(t=>{(LL.type==='story'?t.split(/(?<=\.)\s+/):[t]).forEach(u=>{if(!pool.some(p=>p.name===u))pool.push({key:LL.id+'|'+u,name:u,say:u.replace(/[.,!?:;׃]+$/,''),text:true});});});});}
+ const own=L.type==='tap'?pool:pool.filter(p=>p.key.startsWith(pre)||L.type==='story');
+ const N=Math.min(gameN(L,g),pool.length);const nQ=Math.min(own.length,lengthN(L.type==='tap'?6:L.type==='syll'?8:5));
+ const mist=own.filter(p=>(k.mist||{})[p.key]);const targets=shuffle(mist).slice(0,Math.ceil(nQ/2));shuffle(own).forEach(p=>{if(targets.length<nQ&&!targets.includes(p))targets.push(p);});
+ const items=shuffle(targets).map(o=>{let rest=pool.filter(p=>p!==o&&p.name!==o.name&&(!o.show||p.show!==o.show));
+  if(g===3&&o.text)rest.sort((a,b)=>txtSim(o.name,b.name)-txtSim(o.name,a.name));else rest=shuffle(rest);
+  return{key:o.key,text:o.name,type:'game',pts:Math.round(L.pts*(1+g*.5)),o,opts:shuffle([o,...rest.slice(0,N-1)]),L,g};});
+ beginSession({lvl:i,items});}
+function gameQ(it){const k=kidById(curKid);const n=P.idx===0;if(it.o.cnt&&it.L.id==='t9')return(n?k.name+', ':'')+'איפה המספר '+sayName(it.o.name)+'?';
+ if(it.o.text){const kind={syll:'ההברה',word:'המילה',phrase:'המילים',sentence:'המשפט',story:'המשפט'}[it.L.type]||'';return(n?k.name+', ':'')+'איפה '+kind+' '+it.o.say+'?';}
+ const qs=qList(k);return fill(n||qs.length<2?qs[0]:rnd(qs.slice(1)),k,whatPre(it.L)+sayName(it.o.name));}
+function gameHTML(){const it=cur();if(!it.q)it.q=gameQ(it);const N=it.opts.length,t=it.L.type;
+ const cols=t==='sentence'||t==='story'?1:t==='phrase'?(N>4?2:1):N<=4?2:N<=9?3:N<=12?4:5;
+ const fs=t==='syll'?(N>12?30:38):t==='word'?(N>9?20:26):t==='phrase'?20:t==='tap'?(N>6?40:52):17;
+ const L=it.L;const hide=it.o.text;
+ return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 🧩 ${['','קל','בינוני','קשה'][it.g]}</div>
+ <div class="tq"><div class="tqt" style="font-size:21px">${hide?`👂 ${esc(it.q.slice(0,it.q.lastIndexOf(it.o.say))).trim()} <span id="gAns" style="opacity:.0">${esc(it.o.name)}</span>`:esc(it.q)}</div>
+ <div class="row" style="gap:10px"><button class="side" onclick="playItem(cur().q,true)">🔊</button>${hide?`<button class="side" onclick="$('gAns').style.opacity=1;cur()._peek=1">👁️<small>הצג</small></button>`:''}</div></div>
+ <div class="gtiles" style="grid-template-columns:repeat(${cols},1fr);font-size:${fs}px">${it.opts.map((o,i)=>`<button class="gtile" id="gt${i}" onclick="gamePick(${i})" ${o.cnt&&L.id==='t9'&&!o.text?'':''}>${o.text?esc(o.name):o.show}</button>`).join('')}</div>
+ ${L.id==='t9'?'':''}<div class="fb" id="fb"></div>`;}
+function gamePick(i){if(!P||P.done)return;const it=cur();const k=kidById(curKid);const el=$('gt'+i);k.mist=k.mist||{};stopSpeak();
+ if(it.opts[i]===it.o){P.done=true;track(k,it.key,'ok',qMs());el.classList.add('right');let pts=it.pts;if(P.attempts>0||it._peek)pts=Math.max(1,Math.ceil(pts/2));
+  if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
+  P.res[P.idx]=P.attempts===0&&!it._peek;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
+  SND.ok();confetti(50);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),300);const a=$('gAns');if(a)a.style.opacity=1;
+  $('fb').innerHTML=`<div class="pop big" style="font-size:24px;font-weight:800">${esc(ph)} 🎉</div>`;setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2400);}
+ else{track(k,it.key,'bad');P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();el.classList.add('wrong');el.disabled=true;
+  const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>`;setTimeout(()=>cheerSay([e,it.q.replace(/^[^,]*, /,'')]),350);}}
 function mkItem(L,t,pre){if(L.type!=='tap')return{key:pre+t,text:t,type:L.type,pts:L.pts};
  const o=L.items.find(x=>x.name===t);const others=shuffle(L.items.filter(x=>x.name!==t&&x.show!==o.show)).slice(0,(L.opt||3)-1);
  const it={key:pre+t,text:t,type:'tap',pts:L.pts,o,opts:shuffle([o,...others]),say:o.say||t};
@@ -399,7 +443,7 @@ function startBook(id,unit){closeModal();const b=S.books.find(x=>x.id===id);if(!
  const start=unit==='story'?Math.floor(Math.random()*src.length):0;
  const pick=unit==='story'?[src[start]]:shuffle(src).slice(0,n);
  beginSession({book:b.name,items:pick.map(t=>({key:'b'+id+'|'+t,text:t,type:unit,pts}))});}
-function beginSession(o){const kk=kidById(curKid);P=Object.assign({mode:kk.mode==='listen'?'listen':'read',idx:0,res:[],earned:0,start:Date.now(),attempts:0,listening:false,done:false},o);ac();go('practice');}
+function beginSession(o){const kk=kidById(curKid);P=Object.assign({mode:['listen','game'].includes(kk.mode)?kk.mode:'read',idx:0,res:[],earned:0,start:Date.now(),attempts:0,listening:false,done:false},o);ac();go('practice');}
 function cur(){return P.items[P.idx];}
 const CAN_LISTEN=()=>!!SRC&&window.isSecureContext;
 function isParentMode(it){return it.type==='syll'||S.settings.verify==='parent'||!CAN_LISTEN()||(P&&P.micDenied);}
@@ -464,26 +508,32 @@ function learnSaid(ok){const k=kidById(curKid);if(ok){SND.ok();confetti(40);cons
 function showSayParent(isLearn){const fb=$('fb');if(!fb||document.getElementById('sayPar'))return;
  fb.insertAdjacentHTML('afterend',`<div class="parentrow" id="sayPar" style="margin-top:14px"><button class="btn ok" onclick="if(SAY)SAY.abort();stopSpeak();${isLearn?'learnSaid(true)':"sayResult(true,'')"}">✅ ${G('אמר נכון','אמרה נכון')}</button><button class="btn ghost" onclick="${isLearn?'learnNext()':'skipItem()'}">⏭ הלאה</button></div><div class="hint" style="text-align:center">👨 כפתורים להורה – אם המערכת לא שמעה טוב</div>`);}
 function sayResult(ok,heard){if(!P||P.done)return;if(SAY)SAY.abort();const it=cur();const k=kidById(curKid);k.mist=k.mist||{};
- if(ok){P.done=true;let pts=it.pts*2;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
+ if(ok){P.done=true;track(k,it.key,'ok',qMs());let pts=it.pts*2;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
   P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();const a=$('ans');if(a)a.style.display='block';
   SND.ok();confetti(60);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),400);
   $('fb').innerHTML=`<div class="pop big" style="font-size:26px;font-weight:800">${esc(ph)} 🎉</div>`;setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2700);}
- else{P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();const e=fill(rnd(kidEnc(k)),k);
+ else{track(k,it.key,'bad');P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();const e=fill(rnd(kidEnc(k)),k);
   $('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>${P.attempts>=2?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="$('ans').style.display='block';playItem(cur().o.name)">💡 רמז – איך אומרים?</button><button class="btn sm ghost" onclick="skipItem()">נמשיך ➜</button></div>`:''}`;const o=it.o;showSayParent(false);cheerSay([e,shortQ()]).then(()=>{if(P&&P.attempts<3)autoSay(o,false,200);});}}
 function tapHTML(){const it=cur();if(P.mode!=='listen')return sayHTML();if(!it.q)buildQ(it);
  return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(LEVELS[P.lvl].title)}</div>
  <div class="tq">${it.pv||''}<div class="tqt">${it.qHTML}</div><button class="side" onclick="playItem(cur().q,true)">🔊</button></div>
  <div class="tiles ${it.opts.length>3?'four':''}">${it.opts.map((o,i)=>`<button class="tile" id="tile${i}" onclick="tapPick(${i})">${o.show}</button>`).join('')}</div><div class="fb" id="fb"></div>`;}
+/* ================= מעקב חכם אחרי הילד ================= */
+function track(k,key,res,ms){if(!k||!key)return;k.st=k.st||{};const r=k.st[key]=k.st[key]||{p:0,f:0,c:0,a:0,t:0,tn:0,ls:0};
+ if(res==='ok'){r.p++;r.c++;r.a++;if(!P||P.attempts===0)r.f++;if(ms>0&&ms<60000){r.t+=ms;r.tn++;}r.ls=Date.now();}
+ else if(res==='bad'){r.a++;r.ls=Date.now();}
+ else if(res==='skip'){r.p++;r.ls=Date.now();}}
+function qMs(){return P&&P.qT?Date.now()-P.qT:0;}
 function tapPick(i){if(!P||P.done)return;const it=cur();const k=kidById(curKid);const el=$('tile'+i);k.mist=k.mist||{};
- if(it.opts[i]===it.o){P.done=true;el.classList.add('right');let pts=it.pts;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));
+ if(it.opts[i]===it.o){P.done=true;track(k,it.key,'ok',qMs());el.classList.add('right');let pts=it.pts;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));
   if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
   P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
   SND.ok();confetti(50);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),400);
   $('fb').innerHTML=`<div class="pop big" style="font-size:26px;font-weight:800">${esc(ph)} 🎉</div>`;
   setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2700);}
- else{P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();el.classList.add('wrong');el.disabled=true;
+ else{track(k,it.key,'bad');P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();el.classList.add('wrong');el.disabled=true;
   const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:21px;font-weight:700">${esc(e)} 💪</div>`;setTimeout(()=>cheerSay([e,it.short]),450);}}
-function practiceHTML(){if(P.learn)return learnHTML();if(cur().type==='tap')return tapHTML();const k=kidById(curKid);const it=cur();const T=TYPE[it.type];const pm=isParentMode(it);
+function practiceHTML(){if(cur().type==='game')return gameHTML();if(P.learn)return learnHTML();if(cur().type==='tap')return tapHTML();const k=kidById(curKid);const it=cur();const T=TYPE[it.type];const pm=isParentMode(it);
  const title=P.book?('📚 '+esc(P.book)):('שלב '+(P.lvl+1)+' · '+esc(LEVELS[P.lvl].title));
  return `<div class="pbar"><button class="ibtn" onclick="quitSession()">✕</button><div class="pdots">${P.items.map((_,i)=>`<b class="${i<P.idx?(P.res[i]?'ok':'no'):i===P.idx?'cur':''}"></b>`).join('')}</div>${avatar(k,'sm')}</div>
  <div class="mut" style="text-align:center;margin-bottom:8px">${title}${P.mode==='listen'?' · <b style="color:var(--pri)">👂 הקשב וחזור אחריי</b>':''}</div>
@@ -566,6 +616,7 @@ function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TY
  const toks=it.text.split(/\s+/).filter(Boolean);const said=ev.saidTok||{};
  document.querySelectorAll('#read .w').forEach((e,i)=>{e.className='w '+(ev.okTok[i]?'ok':'miss');if(!ev.okTok[i])e.innerHTML=esc(toks[i]||'')+(said[i]?`<small class="said">נשמע: ${esc(said[i])}</small>`:'');});
  k.mist=k.mist||{};
+ if(!byParent&&toks.length>1){k.wm=k.wm||{};toks.forEach((t,i)=>{if(!ev.okTok[i]){const w=t.replace(/[.,!?;:׃"'״׳()]/g,'');if(norm(w))k.wm[w]=(k.wm[w]||0)+1;}});}
  let pace=null,wpm=0;
  if(!byParent&&sent&&ev.total>=4&&ev.cnt>0&&P.heard&&P.heard.lastT>P.heard.firstT){const dur=(P.heard.lastT-P.heard.firstT)/1000+.7;wpm=Math.round(ev.total/(dur/60));
   pace=wpm<S.settings.paceMin?'slow':wpm>S.settings.paceMax?'fast':'good';}
@@ -576,6 +627,7 @@ function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TY
   let stars=score>=95?3:score>=85?2:1;let bonus=0;
   if(pace){k.lastWpm=wpm;if(pace==='good')bonus=Math.ceil(it.pts*.4);}
   let pts=Math.max(1,Math.round(it.pts*stars/3));if(P.mode==='listen')pts=Math.max(1,Math.round(pts*.6));if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));pts+=bonus;
+  track(k,it.key,'ok',qMs());if(wpm&&!byParent){P.wpms=(P.wpms||[]).concat(wpm);}if(!byParent&&sent)P.accs=(P.accs||[]).concat(ev.acc);
   if(P.attempts===0){if(k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}}
   P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
   P.ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([P.ph]),450);const bigOne=it.type==='sentence'||it.type==='story';(bigOne?SND.big:SND.ok)();confetti(bigOne?140:60);plusPts(pts);
@@ -584,11 +636,12 @@ function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TY
    ${sent?`<button class="btn ok" style="margin-top:12px" onclick="nextItem()">המשך ➜</button>`:''}</div>`;
   P.done=true;if(!sent)setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2600);
  }else{
+  track(k,it.key,'bad');if(!byParent&&sent)P.accs=(P.accs||[]).concat(ev.acc);
   P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();$('read').classList.remove('shake');void $('read').offsetWidth;$('read').classList.add('shake');
   const pct=Math.round(ev.acc*100);const enc=fill(rnd(kidEnc(k)),k);cheerSay([enc]);
   $('fb').innerHTML=`<div class="pop"><div class="big" style="font-size:21px">${esc(enc)} 💪</div>${sent&&ev.total>1?`${scoreHTML}<div class="mut">המילים באדום נקראו לא נכון – מתחת לכל אחת כתוב מה נשמע</div>`:(said[0]?`<div class="mut">נשמע: ${esc(said[0])}</div>`:'')}
    ${P.attempts>=3?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="playItem(cur().text)">${G('🔊 שמע איך קוראים','🔊 שמעי איך קוראים')}</button><button class="btn sm ghost" onclick="skipItem()">נמשיך הלאה ➜</button></div>`:''}</div>`;}}
-function skipItem(){if(!P)return;stopRec();if(!P.done){P.res[P.idx]=false;const k=kidById(curKid);k.mist=k.mist||{};const key=cur().key;k.mist[key]=(k.mist[key]||0)+1;save();}nextItem();}
+function skipItem(){if(!P)return;stopRec();if(!P.done&&!P.learn){track(kidById(curKid),cur().key,'skip');}if(!P.done){P.res[P.idx]=false;const k=kidById(curKid);k.mist=k.mist||{};const key=cur().key;k.mist[key]=(k.mist[key]||0)+1;save();}nextItem();}
 function nextItem(){if(!P)return;stopSpeak();P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
 function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.round((Date.now()-P.start)/1000);
  k.goalSec=(k.goalSec||0)+sec;k.totalSec=(k.totalSec||0)+sec;
@@ -599,7 +652,7 @@ function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.r
    if(k.streak>=S.settings.sessionsToPass){k.level++;k.streak=0;leveled=true;}
    else lvlMsg=`💪 אימון מצוין! עוד ${S.settings.sessionsToPass-k.streak} אימונים כאלה ועולים שלב`;}
   else{k.streak=0;lvlMsg='🌱 ממשיכים להתאמן בשלב הזה – כל אימון מחזק!';}}
- k.history=(k.history||[]).slice(-60);k.history.push({d:Date.now(),lvl:P.lvl,lid:P.lvl!==undefined?LEVELS[P.lvl].id:null,book:P.book||null,acc:Math.round(acc*100),pts:P.earned,sec});save();
+ k.history=(k.history||[]).slice(-60);const avg=a=>a&&a.length?a.reduce((x,y)=>x+y,0)/a.length:0;k.history.push({d:Date.now(),lvl:P.lvl,lid:P.lvl!==undefined?LEVELS[P.lvl].id:null,book:P.book||null,acc:Math.round(acc*100),pts:P.earned,sec,wpm:Math.round(avg(P.wpms))||0,racc:P.accs&&P.accs.length?Math.round(avg(P.accs)*100):null});if(leveled)k.repNew=1;save();
  const earned=P.earned;const lvlDone=P.lvl;P=null;
  if(early){go('kid');return;}
  const emoji=acc>=.9?'🏆':acc>=.7?'🌟':'👍';
@@ -612,6 +665,83 @@ function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.r
  ${gr?`<button class="btn warn full pop" style="font-size:20px;padding:18px;margin-bottom:14px" onclick="go('wheel')">${G('🎡 סובב את גלגל המזל!','🎡 סובבי את גלגל המזל!')}</button>`:''}
  <div class="row"><button class="btn ok sp" onclick="${lvlDone!==undefined?`startLevel(${Math.min(k.level,LEVELS.length-1)})`:'chooseBook()'}">▶️ עוד אימון</button><button class="btn ghost sp" onclick="go('kid')">חזרה</button></div>`;
  if(gr)setTimeout(()=>{SND.big();},900);}
+
+/* ================= דוח התקדמות להורים ================= */
+let RID=null;
+function openReport(id){RID=id;const k=kidById(id);if(k&&k.repNew){k.repNew=0;save();}go('report');}
+const CAT_TIP={t1:'שחקו יחד "אני רואה משהו בצבע..." ומצאו בבית חפצים בצבעים: {i}.',t2:'חפשו צורות סביבכם: צלחת עגולה, חלון מרובע, תמרור משולש. אפשר לגזור צורות מנייר ולמיין אותן.',
+ t3:'דפדפו יחד בספר חיות וחקו את הקולות שלהן. התמקדו ב: {i}.',t4:'הסתכלו יחד בשמיים בבוקר ובערב ודברו על מה שרואים.',t5:'בדרך ברחוב הצביעו ושאלו "מה זה?". התמקדו ב: {i}.',
+ t6:'בזמן הארוחה שאלו איך קוראים לכל מאכל. התמקדו ב: {i}.',t7:'שחקו "תביא לי את ה..." עם חפצים בבית. התמקדו ב: {i}.',t8:'ספרו יחד דברים ביומיום: מדרגות, מזלגות, כפתורים.',t9:'ספרו יחד דברים ביומיום: מדרגות, מזלגות, כפתורים.',
+ a:'חפשו את האותיות {i} בשלטים ובספרים, וציירו אותן יחד בחול או בבצק.',a4:'הניחו את האותיות הדומות ({i}) זו לצד זו והראו בדיוק במה הן שונות.',
+ n:'תרגלו 3–5 דקות ביום הברות קצרות עם התנועות שקשות: {i}.',w:'קראו יחד את המילים הקשות ({i}) ופרקו כל אחת להברות.',s:'קריאה משותפת: אתם קוראים שורה, והילד קורא אותה אחריכם.'};
+function catTip(id,items){const t=CAT_TIP[id]||(id==='a4'?CAT_TIP.a4:id[0]==='a'?CAT_TIP.a:/^n[123]$/.test(id)?CAT_TIP.n:/^n/.test(id)?CAT_TIP.w:id[0]==='s'?CAT_TIP.s:'');return t.replace('{i}',items.slice(0,5).join(', '));}
+function repData(k){const st=k.st||{},cats=[];const byL={};
+ for(const key in st){const lid=key.split('|')[0];(byL[lid]=byL[lid]||[]).push([key.slice(lid.length+1),st[key]]);}
+ LEVELS.forEach((L,i)=>{const e=byL[L.id];if(!e)return;let p=0,f=0,t=0,tn=0;e.forEach(([n,r])=>{p+=r.p;f+=r.f;t+=r.t;tn+=r.tn;});if(!p)return;
+  cats.push({id:L.id,i,title:L.title.replace(NQ,''),w:L.w,p,f,acc:f/p,ms:tn?t/tn:0,tn,items:e.map(([n,r])=>({n,p:r.p,f:r.f,acc:r.p?r.f/r.p:0}))});});
+ const all=cats.flatMap(c=>c.items.map(x=>({...x,cat:c})));
+ const weak=all.filter(x=>x.p>=2&&x.acc<.7).sort((a,b)=>a.acc-b.acc||b.p-a.p);
+ const strong=all.filter(x=>x.p>=2&&x.acc>=.9).sort((a,b)=>b.p-a.p);
+ const totP=cats.reduce((a,c)=>a+c.p,0),totT=cats.reduce((a,c)=>a+c.ms*c.tn,0),totTn=cats.reduce((a,c)=>a+c.tn,0);
+ const H=k.history||[],day=864e5,now=Date.now();const days=new Set(H.filter(h=>now-h.d<14*day).map(h=>new Date(h.d).toDateString()));
+ const read=H.filter(h=>h.wpm>0).slice(-15);
+ return{cats,weak,strong,totP,avgMs:totTn?totT/totTn:0,days:days.size,mins:Math.round((k.totalSec||0)/60),sess:H.length,read,
+  words:Object.entries(k.wm||{}).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>x[0])};}
+function repText(k,D){const g=(m,f)=>isF(k)?f:m,n=k.name,out=[],tips=[];
+ const L=LEVELS[Math.min(k.level,LEVELS.length-1)].title.replace(NQ,'');
+ out.push(`${n} ${g('התאמן','התאמנה')} ${D.days} ${D.days===1?'יום':'ימים'} בשבועיים האחרונים: בסך הכול ${D.sess} אימונים ו־${D.mins} דקות. כרגע ${g('הוא','היא')} בשלב ${k.level+1} (${L}).`);
+ const li=ageLevel(k.age);
+ if(li>=0){if(k.level>li+1)out.push(`זה מעל השלב שהמסלול באפליקציה מציע לגיל ${k.age}. יפה מאוד!`);else if(k.level>=li-1)out.push(`זה בהתאם לשלב שהמסלול באפליקציה מציע לגיל ${k.age}.`);else out.push(`המסלול באפליקציה מציע לגיל ${k.age} את שלב ${li+1}. יש עוד דרך עד שם, ותרגול קצר וקבוע יעזור להתקדם.`);}
+ if(D.totP<15){out.push(`עדיין אין מספיק תשובות לסיכום מדויק (${D.totP} עד עכשיו). אחרי עוד כמה אימונים הדוח יהיה מדויק יותר.`);}
+ const good=D.cats.filter(c=>c.p>=4&&c.acc>=.85),bad=D.cats.filter(c=>c.p>=4&&c.acc<.65);
+ if(good.length)out.push(`💪 ${g('חזק','חזקה')} ב: ${good.map(c=>c.title).join(', ')}.`);
+ if(bad.length)out.push(`🌱 ${g('צריך','צריכה')} עוד חיזוק ב: ${bad.map(c=>c.title).join(', ')}.`);
+ if(D.weak.length)out.push(`הפריטים שהכי כדאי לחזק: ${D.weak.slice(0,6).map(x=>x.n).join(', ')}.`);
+ const sp=D.cats.filter(c=>c.tn>=3);if(sp.length>=2&&D.avgMs){const slow=sp.filter(c=>c.ms>D.avgMs*1.4),fast=sp.filter(c=>c.ms<D.avgMs*.75);
+  if(fast.length)out.push(`⚡ ${g('עונה','עונה')} מהר במיוחד ב: ${fast.map(c=>c.title).join(', ')} – סימן שזה כבר ${g('ידוע לו','ידוע לה')} היטב.`);
+  if(slow.length){out.push(`🐢 ${g('לוקח לו','לוקח לה')} יותר זמן לענות ב: ${slow.map(c=>c.title).join(', ')}. זה לא בהכרח קושי, אבל זה סימן שהידע עוד לא אוטומטי.`);tips.push(`כשהתשובה לוקחת זמן – ${g('תנו לו','תנו לה')} לחשוב בשקט ואל תענו במקומו. תרגול חוזר קצר הופך ידע לאוטומטי.`);}}
+ if(D.read.length){const r=D.read.slice(-5),w=Math.round(r.reduce((a,h)=>a+h.wpm,0)/r.length),ra=r.filter(h=>h.racc!=null);const acc=ra.length?Math.round(ra.reduce((a,h)=>a+h.racc,0)/ra.length):null;
+  out.push(`📖 קצב קריאה ממוצע באימונים האחרונים: ${w} מילים לדקה${acc!=null?`, עם ${acc}% מילים נכונות`:''}.`);
+  if(w<S.settings.paceMin)tips.push('קריאה חוזרת של אותו קטע קצר 3 פעמים ברצף משפרת שטף קריאה.');
+  if(w>S.settings.paceMax&&acc!=null&&acc<85)tips.push(`${g('הוא קורא','היא קוראת')} מהר אבל עם טעויות – כדאי לעודד לקרוא לאט וברור, עם אצבע מתחת למילה.`);
+  if(acc!=null&&acc<80)tips.push('קריאה משותפת: אתם קוראים משפט, והילד קורא אותו אחריכם.');}
+ if(D.words.length)tips.push(`מילים שחזרו בטעויות הקריאה: ${D.words.slice(0,6).join(', ')}. אפשר לכתוב אותן על כרטיסים ולתרגל.`);
+ const tc=[...new Set(bad.concat(D.weak.map(x=>x.cat)))];tc.reverse().forEach(c=>{const t=catTip(c.id,c.items.filter(x=>x.p>=2&&x.acc<.7).map(x=>x.n));if(t)tips.unshift(`${c.title}: ${t}`);});
+ if(D.days<4&&D.sess>0)tips.push('תרגול קצר וקבוע (10 דקות ביום) עדיף על תרגול ארוך פעם בשבוע.');
+ return{out,tips};}
+function stBar(acc){const c=acc>=.85?['#0ca30c','✓ חזק']:acc>=.65?['#fab219','⚠ בינוני']:['#d03b3b','✗ לחזק'];return c;}
+function reportHTML(){const k=kidById(RID);if(!k)return settingsHTML();const D=repData(k),T=repText(k,D);
+ const now=Date.now(),day=864e5,act=[];for(let i=13;i>=0;i--){const d=new Date(now-i*day);const m=Math.round((k.history||[]).filter(h=>new Date(h.d).toDateString()===d.toDateString()).reduce((a,h)=>a+(h.sec||0),0)/60);act.push({d,m});}
+ const amax=Math.max(1,...act.map(a=>a.m));
+ let h=`<div class="top"><button class="ibtn" onclick="setTab='kids';go('settings')">➜ חזרה</button><div class="brand" style="font-size:19px">📊 דוח התקדמות</div></div>
+ <div class="hero">${avatar(k,'lg')}<h2>${esc(k.name)}</h2><div class="mut">${k.age?'גיל '+esc(k.age)+' · ':''}שלב ${k.level+1} · ⭐ ${k.points||0}</div></div>
+ <div class="card sum"><b>📝 תמונת מצב</b>${T.out.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`;
+ if(D.cats.length)h+=`<div class="card"><b>🎯 הצלחה בניסיון הראשון, לפי נושא</b><div class="hint" style="margin-bottom:6px">אחוז הפעמים ש${isF(k)?'היא ענתה':'הוא ענה'} נכון כבר בפעם הראשונה</div>
+  ${D.cats.map(c=>{const [col,lab]=stBar(c.acc);return `<div class="rbar"><span class="lb">${esc(c.title)}</span><span class="tr"><i style="width:${Math.max(4,Math.round(c.acc*100))}%;background:${col}"></i></span><span class="vl">${Math.round(c.acc*100)}% <span style="font-weight:500;color:var(--mut)">${lab}</span></span></div>`;}).join('')}
+  <div class="hint">✓ חזק (85% ומעלה) · ⚠ בינוני (65%–85%) · ✗ לחזק (מתחת ל־65%)</div></div>`;
+ if(D.weak.length||D.strong.length)h+=`<div class="card"><b>🌱 כדאי לחזק</b><div>${D.weak.slice(0,12).map(x=>`<span class="chip bad">${esc(x.n)} · ${Math.round(x.acc*100)}%</span>`).join('')||'<span class="mut">אין כרגע 👏</span>'}</div>
+  ${(()=>{const cs=[...new Set(D.weak.map(x=>x.cat))].slice(0,4);return cs.length?`<div class="row wrap" style="margin-top:10px">${cs.map(c=>`<button class="btn sm warn" onclick="curKid='${k.id}';startLevel(${c.i})">🎯 תרגול: ${esc(c.title)}</button>`).join('')}</div>`:'';})()}
+  ${D.strong.length?`<b style="display:block;margin-top:14px">💪 כבר שולט${isF(k)?'ת':''}</b><div>${D.strong.slice(0,12).map(x=>`<span class="chip ok">${esc(x.n)}</span>`).join('')}</div>`:''}</div>`;
+ if(D.cats.some(c=>c.tn>=3))h+=`<div class="card"><b>⏱️ זמן תגובה ממוצע (שניות)</b><div class="hint" style="margin-bottom:6px">מהרגע שהשאלה מופיעה ועד תשובה נכונה. ככל שקצר יותר – הידע אוטומטי יותר.</div>
+  ${(()=>{const cs=D.cats.filter(c=>c.tn>=3),mx=Math.max(...cs.map(c=>c.ms));return cs.map(c=>`<div class="rbar"><span class="lb">${esc(c.title)}</span><span class="tr"><i style="width:${Math.round(c.ms/mx*100)}%;background:#6c4cf1"></i></span><span class="vl">${(c.ms/1000).toFixed(1)}</span></div>`).join('');})()}</div>`;
+ if(D.read.length>=2){const W=320,Hh=120,P0=26,xs=D.read.map((r,i)=>P0+i*(W-P0*2)/Math.max(1,D.read.length-1)),mx=Math.max(...D.read.map(r=>r.wpm))*1.15,ys=D.read.map(r=>Hh-18-(r.wpm/mx)*(Hh-36));
+  h+=`<div class="card"><b>📖 קצב קריאה (מילים לדקה) – ${D.read.length} אימונים אחרונים</b><div class="spark" id="spk" style="direction:ltr"><svg viewBox="0 0 ${W} ${Hh}" style="width:100%;height:auto;margin-top:8px">
+   <line x1="${P0}" x2="${W-P0}" y1="${Hh-18}" y2="${Hh-18}" stroke="#c3c2b7"/>
+   ${[S.settings.paceMin,S.settings.paceMax].filter(v=>v<mx).map(v=>{const y=Hh-18-(v/mx)*(Hh-36);return `<line x1="${P0}" x2="${W-P0}" y1="${y}" y2="${y}" stroke="#e1e0d9" stroke-dasharray="3 3"/><text x="${W-P0+2}" y="${y+4}" font-size="10" fill="#8a84a3">${v}</text>`;}).join('')}
+   <polyline fill="none" stroke="#6c4cf1" stroke-width="2" points="${xs.map((x,i)=>x+','+ys[i]).join(' ')}"/>
+   ${xs.map((x,i)=>`<circle cx="${x}" cy="${ys[i]}" r="4" fill="#6c4cf1" stroke="#fff" stroke-width="2"/><circle cx="${x}" cy="${ys[i]}" r="14" fill="transparent" onclick="spTip(this,'${new Date(D.read[i].d).toLocaleDateString('he-IL')}: ${D.read[i].wpm} מילים לדקה${D.read[i].racc!=null?' · '+D.read[i].racc+'% נכון':''}')"/>`).join('')}
+   <text x="${xs[xs.length-1]}" y="${ys[ys.length-1]-10}" font-size="11" font-weight="700" text-anchor="middle" fill="#2d2350">${D.read[D.read.length-1].wpm}</text></svg><div class="tip" id="spkTip"></div></div>
+   <div class="hint">הקווים המקווקווים: הטווח התקין שהגדרתם (${S.settings.paceMin}–${S.settings.paceMax}). לחצו על נקודה לפרטים.</div></div>`;}
+ h+=`<div class="card"><b>📅 דקות תרגול – 14 הימים האחרונים</b><div style="display:flex;direction:ltr;align-items:flex-end;gap:3px;height:90px;margin-top:10px">${act.map(a=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%" title="${a.d.toLocaleDateString('he-IL')}: ${a.m} דק'"><span style="font-size:10px;color:var(--mut)">${a.m||''}</span><div style="width:100%;height:${Math.round(a.m/amax*70)}px;min-height:${a.m?3:0}px;background:#6c4cf1;border-radius:4px 4px 0 0"></div></div>`).join('')}</div>
+  <div style="display:flex;direction:ltr;justify-content:space-between;font-size:10px;color:var(--mut);margin-top:4px;border-top:1px solid #c3c2b7;padding-top:3px"><span>לפני שבועיים</span><span>לפני שבוע</span><span>היום</span></div></div>`;
+ if(T.tips.length)h+=`<div class="card sum"><b>💡 איך לעזור ל${esc(k.name)}</b>${T.tips.slice(0,7).map(t=>`<p>• ${esc(t)}</p>`).join('')}</div>`;
+ h+=`<button class="btn ok full" onclick="shareReport('${k.id}')">📤 שליחת הסיכום בוואטסאפ</button>
+ <div class="disc" style="margin-top:14px">ℹ️ הסיכום מבוסס רק על התרגול באפליקציה, ונבנה לפי כללים קבועים. הוא לא אבחון מקצועי. אם יש דאגה לגבי ההתפתחות, השפה או הקריאה של הילד – כדאי להתייעץ עם הגננת או המורה, עם רופא הילדים או עם קלינאית תקשורת.</div>
+ <div class="foot">חי אפליקציות © · קוראים בכיף</div>`;
+ return h;}
+function spTip(el,t){const tp=$('spkTip'),box=$('spk');if(!tp||!box)return;const r=el.getBoundingClientRect(),b=box.getBoundingClientRect();tp.textContent=t;tp.style.left=(r.left-b.left+r.width/2)+'px';tp.style.top=(r.top-b.top+r.height/2)+'px';tp.style.display='block';clearTimeout(tp._t);tp._t=setTimeout(()=>tp.style.display='none',2500);}
+function shareReport(id){const k=kidById(id);const D=repData(k),T=repText(k,D);const txt=`📊 סיכום התקדמות – ${k.name}\n(קוראים בכיף)\n\n`+T.out.join('\n')+(T.tips.length?`\n\n💡 איך לעזור:\n`+T.tips.slice(0,7).map(t=>'• '+t).join('\n'):'')+`\n\nהסיכום מבוסס על התרגול באפליקציה ואינו אבחון מקצועי.`;
+ location.href='https://wa.me/?text='+encodeURIComponent(txt);}
 
 /* ================= גלגל המזל ================= */
 let wAng=0,spinning=false;
@@ -646,12 +776,13 @@ function won(prize){const k=kidById(curKid);k.prizes=k.prizes||[];k.prizes.push(
 function openSettings(tab,addKid){modal(`<h3 style="margin-top:0">🔒 כניסת הורים</h3><div class="mut">הקלידו את קוד ההורים${S.pin==='1234'?' (קוד התחלתי: 1234)':''}</div>
  <input class="in" id="pinIn" type="password" inputmode="numeric" style="margin:12px 0;font-size:24px;text-align:center;letter-spacing:8px" onkeydown="if(event.key==='Enter')checkPin('${tab||''}',${!!addKid})">
  <button class="btn full" onclick="checkPin('${tab||''}',${!!addKid})">כניסה</button>`);setTimeout(()=>$('pinIn')&&$('pinIn').focus(),100);}
-function checkPin(tab,addKid){if($('pinIn').value!==S.pin){$('pinIn').classList.add('shake');toast('קוד שגוי');return;}closeModal();if(tab)setTab=tab;go('settings');if(addKid)editKid(null);}
+let pendRep=null;
+function checkPin(tab,addKid){if($('pinIn').value!==S.pin){$('pinIn').classList.add('shake');toast('קוד שגוי');return;}closeModal();if(pendRep){const r=pendRep;pendRep=null;openReport(r);return;}if(tab)setTab=tab;go('settings');if(addKid)editKid(null);}
 function settingsHTML(){const tabs=[['kids','👧 ילדים'],['goal','🎯 יעד ופרסים'],['read','🎤 קריאה'],['books','📚 ספרים'],['voice','🗣️ דיבור ועידוד'],['rec','🎙️ הקלטות'],['more','💾 עוד']];
  let h=`<div class="top"><button class="ibtn" onclick="go('home')">➜ סיום</button><div class="brand" style="font-size:19px">⚙️ הגדרות הורים</div></div>
  <div class="tabs">${tabs.map(t=>`<button class="tab ${setTab===t[0]?'on':''}" onclick="setTab='${t[0]}';render()">${t[1]}</button>`).join('')}</div>`;
  const s=S.settings;
- if(setTab==='kids'){h+=`<div class="card">${S.kids.length?S.kids.map(k=>`<div class="li">${avatar(k,'sm')}<div class="sp"><b>${esc(k.name)}</b><div class="mut">שלב ${k.level+1} · ⭐ ${k.points||0} · ${Math.round((k.totalSec||0)/60)} דק' קריאה</div></div><button class="btn sm ghost" onclick="editKid('${k.id}')">✏️ עריכה</button></div>`).join(''):'<div class="mut">עדיין אין ילדים</div>'}</div>
+ if(setTab==='kids'){h+=`<div class="card">${S.kids.length?S.kids.map(k=>`<div class="li">${avatar(k,'sm')}<div class="sp"><b>${esc(k.name)}</b><div class="mut">שלב ${k.level+1} · ⭐ ${k.points||0} · ${Math.round((k.totalSec||0)/60)} דק' קריאה</div></div><button class="btn sm" onclick="openReport('${k.id}')">📊 דוח</button><button class="btn sm ghost" onclick="editKid('${k.id}')">✏️</button></div>`).join(''):'<div class="mut">עדיין אין ילדים</div>'}</div>
   <button class="btn full" onclick="editKid(null)">＋ הוספת ילד</button>`;}
  else if(setTab==='goal'){h+=`<div class="card"><label class="f">סוג היעד</label><div class="seg"><button class="${s.goalType==='points'?'on':''}" onclick="setS('goalType','points')">⭐ נקודות</button><button class="${s.goalType==='minutes'?'on':''}" onclick="setS('goalType','minutes')">⏱️ דקות קריאה</button></div>
   <label class="f">כמה ${s.goalType==='minutes'?'דקות':'נקודות'} צריך כדי לסובב את הגלגל?</label><input class="in" type="number" min="1" value="${s.goalTarget}" onchange="setS('goalTarget',Math.max(1,+this.value||1))"></div>
@@ -728,21 +859,29 @@ function importData(inp){const f=inp.files[0];if(!f)return;const fr=new FileRead
 /* --- עריכת ילד --- */
 let EK=null;
 function editKid(id){const k=id?kidById(id):null;EK=k?JSON.parse(JSON.stringify(k)):{id:uid(),name:'',age:'',gender:'m',praise:null,enc:null,emoji:rnd(EMOJIS),photo:'',level:0,points:0,goalPts:0,goalSec:0,streak:0,mist:{},history:[],prizes:[],_new:true};drawKidEditor();}
-function drawKidEditor(){const k=EK;
+function ageLevel(a){a=+a||0;if(!a)return -1;const id=a<=3?'t1':a===4?'a1':a===5?'n1':a===6?'n4':a===7?'n6':a===8?'s1':'s2';return LEVELS.findIndex(L=>L.id===id);}
+const NAME_RE=n=>new RegExp('(^|[^\u05D0-\u05EA])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=$|[^\u05D0-\u05EA])','g');
+function edShow(arr){const n=(EK.name||'').trim();return arr.map(l=>n?l.replace(/\{שם\}/g,n):l).join('\n');}
+function edParse(v){const n=(EK.name||'').trim();return v.split('\n').map(x=>x.trim()).filter(Boolean).map(l=>n?l.replace(NAME_RE(n),'$1{שם}'):l);}
+function edLines(){const p=$('edPraise'),e=$('edEnc');if(p&&document.activeElement!==p)p.value=edShow(kidPraise(EK));if(e&&document.activeElement!==e)e.value=edShow(kidEnc(EK));}
+function edAge(){const h=$('ageHint');if(!h)return;const li=ageLevel(EK.age);if(li<0){h.textContent='';return;}
+ if(EK._new&&!EK._lvlSet){EK.level=li;const sel=$('edLvl');if(sel)sel.value=li;}
+ const t=LEVELS[li].title.replace(NQ,'');h.innerHTML=EK.level===li?`📍 מתאים לגיל: שלב ${li+1} – ${esc(t)} ✓`:`📍 השלב המתאים לגיל ${esc(EK.age)}: שלב ${li+1} – ${esc(t)} <button class="linkbtn" onclick="EK.level=${li};EK.streak=0;EK._lvlSet=1;$('edLvl').value=${li};edAge()">להעביר לשם</button>`;}
+function drawKidEditor(){const k=EK;setTimeout(edAge,0);
  modal(`<h3 style="margin-top:0">${k._new?'👶 ילד חדש':'✏️ עריכת '+esc(k.name)}</h3>
  <div style="text-align:center">${avatar(k,'lg')}<div class="row" style="justify-content:center;gap:8px">
  <label class="btn sm" style="margin:0">📷 ${k.photo?'החלפת תמונה':'הוספת תמונה'}<input type="file" accept="image/*" style="display:none" onchange="pickPhoto(this)"></label>
  ${k.photo?`<button class="btn sm" onclick="openCrop(EK.photoSrc||EK.photo)">✂️ מיקום וזום</button><button class="btn sm ghost" onclick="EK.photo='';EK.photoSrc='';drawKidEditor()">הסרה</button>`:''}</div></div>
- <label class="f">שם</label><input class="in" id="kName" value="${esc(k.name)}" oninput="EK.name=this.value">
- <label class="f">גיל</label><input class="in" id="kAge" type="number" value="${esc(k.age)}" oninput="EK.age=this.value">
+ <label class="f">שם</label><input class="in" id="kName" value="${esc(k.name)}" oninput="EK.name=this.value;edLines()">
+ <label class="f">גיל</label><input class="in" id="kAge" type="number" value="${esc(k.age)}" oninput="EK.age=this.value;edAge()"><div class="hint" id="ageHint"></div>
  <label class="f">בן או בת? (כדי שהקול ידבר נכון)</label><div class="seg"><button class="${!isF(k)?'on':''}" onclick="EK.gender='m';drawKidEditor()">👦 בן</button><button class="${isF(k)?'on':''}" onclick="EK.gender='f';drawKidEditor()">👧 בת</button></div>
- <label class="f">🎉 קריאות עידוד אחרי הצלחה</label><textarea class="in" rows="5" oninput="EK.praise=this.value.split('\\n').map(x=>x.trim()).filter(Boolean)">${esc(kidPraise(k).join('\n'))}</textarea>
- <label class="f">💪 מילים אחרי טעות</label><textarea class="in" rows="4" oninput="EK.enc=this.value.split('\\n').map(x=>x.trim()).filter(Boolean)">${esc(kidEnc(k).join('\n'))}</textarea>
- <div class="hint">שורה לכל משפט. <b>{שם}</b> יוחלף בשם הילד. למשל: "{שם} נסיך עולם!"</div>
+ <label class="f">🎉 קריאות עידוד אחרי הצלחה</label><textarea class="in" id="edPraise" rows="5" oninput="EK.praise=edParse(this.value)">${esc(edShow(kidPraise(k)))}</textarea>
+ <label class="f">💪 מילים אחרי טעות</label><textarea class="in" id="edEnc" rows="4" oninput="EK.enc=edParse(this.value)">${esc(edShow(kidEnc(k)))}</textarea>
+ <div class="hint">שורה לכל משפט. השם של הילד נכנס לבד לכל המשפטים, ומתעדכן אם משנים את השם.</div>
  <button class="linkbtn" onclick="EK.praise=null;EK.enc=null;drawKidEditor()">↺ חזרה לקריאות ברירת המחדל</button>
  ${k.photo?'':`<label class="f">דמות (אם אין תמונה)</label><div class="emo-pick">${EMOJIS.map(e=>`<button class="${k.emoji===e?'on':''}" onclick="EK.emoji='${e}';drawKidEditor()">${e}</button>`).join('')}</div>`}
- <label class="f">שלב נוכחי</label><select class="in" onchange="EK.level=+this.value;EK.streak=0;EK._lvlSet=1">${LEVELS.map((L,i)=>`<option value="${i}" ${k.level===i?'selected':''}>שלב ${i+1} – ${L.title.replace(NQ,'')}</option>`).join('')}</select>
- <div class="hint">${k._new?'אם לא תבחרו – השלב ייקבע לפי הגיל. ':''}אפשר להתחיל ילד שכבר קורא משלב מתקדם יותר</div>
+ <label class="f">שלב נוכחי</label><select class="in" id="edLvl" onchange="EK.level=+this.value;EK.streak=0;EK._lvlSet=1;edAge()">${LEVELS.map((L,i)=>`<option value="${i}" ${k.level===i?'selected':''}>שלב ${i+1} – ${L.title.replace(NQ,'')}</option>`).join('')}</select>
+ <div class="hint">השלב נקבע לבד לפי הגיל, ואפשר תמיד לבחור כל שלב אחר.</div>
  <button class="btn ok full" style="margin-top:16px" onclick="saveKid()">💾 שמירה</button>
  ${k._new?'':`<div class="row" style="margin-top:12px"><button class="btn sm ghost sp" onclick="resetKid()">🔄 איפוס נקודות</button><button class="btn sm bad sp" onclick="delKid()">🗑️ מחיקה</button></div>`}
  <button class="linkbtn" style="display:block;margin:10px auto 0" onclick="closeModal()">ביטול</button>`);}
@@ -774,7 +913,7 @@ function crSave(){const c=CR,s=c.base*c.z,W=c.w*s,H=c.h*s,L=c.V/2-W/2+c.x,T=c.V/
 function crCancel(){CR=null;delete $('modal').dataset.lock;drawKidEditor();}
 function saveKid(){if(!EK.name.trim())return toast('צריך שם 🙂');const isNew=EK._new;delete EK._new;
  const same=(a,b)=>a&&b&&a.join('|')===b.join('|');if(same(EK.praise,DEF.praiseM)||same(EK.praise,DEF.praiseF))EK.praise=null;if(same(EK.enc,DEF.encM)||same(EK.enc,DEF.encF))EK.enc=null;
- if(isNew&&!EK._lvlSet){const a=+EK.age||0;const id=a>=7?'n4':a===6?'n1':a===5?'a1':'t1';EK.level=Math.max(0,LEVELS.findIndex(L=>L.id===id));}delete EK._lvlSet;EK.name=EK.name.trim();
+ if(isNew&&!EK._lvlSet){const li=ageLevel(EK.age);EK.level=li<0?0:li;}delete EK._lvlSet;EK.name=EK.name.trim();
  const i=S.kids.findIndex(k=>k.id===EK.id);if(i>=0)S.kids[i]=EK;else S.kids.push(EK);save();closeModal();toast(isNew?'✅ '+EK.name+' נוסף!':'✅ נשמר');render();}
 function resetKid(){if(!confirm('לאפס את הנקודות וההתקדמות ליעד?'))return;EK.points=0;EK.goalPts=0;EK.goalSec=0;saveKid();}
 function delKid(){if(!confirm('למחוק את '+EK.name+'?'))return;S.kids=S.kids.filter(k=>k.id!==EK.id);save();closeModal();render();}
