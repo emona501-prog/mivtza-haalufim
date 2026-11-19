@@ -137,7 +137,7 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 .shp{width:80px;height:80px}.emo{font-size:60px;line-height:1}.pic{width:100px;height:100px;object-fit:contain;display:block;margin:0 auto}.lvis{display:flex;flex-direction:column;justify-content:center;align-items:center}.mic:not(.on){transform:none!important;filter:none!important}.mic.wait{background:#b9b4cc;box-shadow:0 8px 0 #9a94b3;animation:none}.mic.go{background:linear-gradient(135deg,#22c55e,#12a150);box-shadow:0 8px 0 #0e7f3f;animation:micg 1s infinite}@keyframes micg{0%,100%{box-shadow:0 8px 0 #0e7f3f,0 0 0 0 rgba(34,197,94,.55)}50%{box-shadow:0 8px 0 #0e7f3f,0 0 0 18px rgba(34,197,94,0)}}.dig{font-size:64px;font-weight:800;color:var(--pri)}
 .let{font-family:'Frank Ruhl Libre',serif;font-size:74px;font-weight:700;color:var(--pri);line-height:1}
 .cntv{font-size:44px;letter-spacing:6px;line-height:1.35;max-width:320px}
-.learn{text-align:center;padding:26px 16px;cursor:pointer}.lvis{transform:scale(1.7);margin:34px 0 30px}.lname{font-family:'Frank Ruhl Libre',serif;font-size:50px;font-weight:700}
+.learn{text-align:center;padding:26px 16px;cursor:pointer}.lvis{margin:6px 0 16px}.lvis .pic{width:180px;height:180px;max-width:none}.lvis .emo{font-size:110px}.lvis .dot{width:130px;height:130px}.lvis .shp{width:150px;height:150px}.lvis .let{font-size:130px}.lvis .dig{font-size:120px;line-height:1.1}.lvis .cntv{font-size:56px;max-width:330px}.lname{font-family:'Frank Ruhl Libre',serif;font-size:50px;font-weight:700}
 .rbar{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:14px}.rbar .lb{width:108px;flex-shrink:0;font-weight:600}.rbar .tr{flex:1;height:14px;background:#efecf7;border-radius:4px;overflow:hidden}.rbar .tr i{display:block;height:100%;border-radius:0 4px 4px 0}.rbar .vl{width:74px;text-align:left;font-weight:700;color:var(--txt);font-size:13px}
 .chip{display:inline-flex;align-items:center;gap:4px;background:#f5f2ff;border-radius:12px;padding:5px 10px;margin:3px;font-size:14px}.chip.bad{background:#fdecec}.chip.ok{background:#e5f6e5}
 .sum p{margin:8px 0;line-height:1.6}.disc{background:#f3f1f8;border-radius:14px;padding:10px 12px;font-size:12.5px;color:var(--mut);line-height:1.5}
@@ -216,8 +216,8 @@ const DEF={
  praiseF:['כל הכבוד {שם}!','איזו אלופה!','{שם} הנסיכה!','אין כמוך!!!','את קוראת מעולה!','וואו, איזו גאונה!','מדהימה {שם}!','יש! צדקת!'],
  encM:['כמעט! רוצה לנסות שוב?','לא נורא, נסה שוב!','כמעט אבל לא, בוא ננסה עוד פעם','אתה יכול! עוד ניסיון אחד','קרוב מאוד {שם}! נסה שוב'],
  encF:['כמעט! רוצה לנסות שוב?','לא נורא, נסי שוב!','כמעט אבל לא, בואי ננסה עוד פעם','את יכולה! עוד ניסיון אחד','קרוב מאוד {שם}! נסי שוב'],
- qM:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בוא נראה אם אתה יודע איפה {מה}?','{שם}, תראה לי איפה {מה}!','מי יודע איפה {מה}? אולי {שם}?'],
- qF:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בואי נראה אם את יודעת איפה {מה}?','{שם}, תראי לי איפה {מה}!','מי יודעת איפה {מה}? אולי {שם}?']};
+ qM:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בוא נראה אם אתה יודע איפה {מה}?','{שם}, תַּרְאֶה לי איפה {מה}!','מי יודע איפה {מה}? אולי {שם}?'],
+ qF:['היי {שם}, איפה {מה}?','ועכשיו, איפה {מה}?','בואי נראה אם את יודעת איפה {מה}?','{שם}, תִּרְאִי לי איפה {מה}!','מי יודעת איפה {מה}? אולי {שם}?']};
 const isF=k=>!!k&&k.gender==='f';
 const G=(m,f)=>isF(typeof curKid!=='undefined'&&curKid?kidById(curKid):null)?f:m;
 const kidPraise=k=>k.praise&&k.praise.length?k.praise:(isF(k)?DEF.praiseF:DEF.praiseM);
@@ -240,7 +240,8 @@ const WCOL=['#ff6b6b','#ffa41b','#ffd93d','#6bcb77','#4d96ff','#9b5de5','#f15bb5
 
 let S=load();
 function defState(){return{ver:2,pin:'1234',settings:{goalType:'points',goalTarget:60,threshold:85,sessionsToPass:3,length:1,verify:'auto',paceMin:40,paceMax:120,sound:true,voice:true,engine2:'default',autoListen:true,answerSec:6,qM:null,qF:null,markMode:'follow',guideWpm:0,prizes:['🍫 שוקולד','🍭 סוכריה','📺 10 דקות מסך','🎁 הפתעה','⭐ 10 נקודות בונוס','🛝 יציאה לגינה','🍦 גלידה','🎲 משחק עם אבא']},kids:[],books:[]};}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.settings){const d=defState();s.settings=Object.assign(d.settings,s.settings);s.books=s.books||[];if(!s.ver){(s.kids||[]).forEach(k=>k.level=(k.level||0)+EARLY.length);s.ver=2;}return s;}}catch(e){}return defState();}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.settings){const d=defState();s.settings=Object.assign(d.settings,s.settings);s.books=s.books||[];if(s.settings.qF)s.settings.qF=s.settings.qF.map(x=>x.replace('תראי לי','תִּרְאִי לי'));if(s.settings.qM)s.settings.qM=s.settings.qM.map(x=>x.replace('תראה לי','תַּרְאֶה לי'));
+ if(!s.ver){(s.kids||[]).forEach(k=>k.level=(k.level||0)+EARLY.length);s.ver=2;}return s;}}catch(e){}return defState();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('⚠️ הזיכרון מלא – נסו תמונה קטנה יותר או מחקו ספר');}}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -483,7 +484,7 @@ function sayQ(L){return({t1:'איזה צבע זה',t2:'איזו צורה זו',t
 function sayQFull(L,k,first){const q=sayQ(L);const v=first?['{שם}, '+q+'?']:['{שם}, '+q+'?',q+', {שם}?','ועכשיו {שם}, '+q+'?',G('בוא נראה {שם}, ','בואי נראה {שם}, ')+q+'?'];return fill(rnd(v),k);}
 function sayHTML(){const it=cur();const k=kidById(curKid);const L=LEVELS[P.lvl];if(!it.sq)it.sq=sayQFull(L,k,P.idx===0);
  return pbarHTML(P.items,P.idx)+mkHTML()+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 📖 אומרים לבד</div>
- <div class="card learn"><div class="lvis" style="margin:28px 0 22px">${it.pv?it.pv:it.o.show}</div><div class="tqt">${esc(it.sq)}</div><div class="lname" id="ans" style="display:none">${esc(it.o.name)}</div></div>
+ <div class="card learn"><div class="lvis">${it.pv?it.pv:it.o.show}</div><div class="tqt">${esc(it.sq)}</div><div class="lname" id="ans" style="display:none">${esc(it.o.name)}</div></div>
  <div class="heard" id="heard">${G('🎤 לחץ על המיקרופון ותגיד בקול','🎤 לחצי על המיקרופון ותגידי בקול')}</div>
  <div class="micwrap"><button class="side" onclick="if(SAY)SAY.abort();askAndListen()">❓<small>שאלה</small></button><button class="mic" id="mic" onclick="sayListen(cur().o,false)">🎤</button><button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
  <div style="text-align:center"><button class="linkbtn" onclick="sayResult(true,'')">👨 אישור הורה – אמר נכון</button></div><div class="fb" id="fb"></div>`;}
