@@ -143,6 +143,13 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 .sum p{margin:8px 0;line-height:1.6}.disc{background:#f3f1f8;border-radius:14px;padding:10px 12px;font-size:12.5px;color:var(--mut);line-height:1.5}
 .spark{position:relative}.spark .tip{position:absolute;background:#2d2350;color:#fff;font-size:12px;padding:4px 8px;border-radius:8px;pointer-events:none;white-space:nowrap;transform:translate(-50%,-120%);display:none}
 .repban{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#efe9ff,#fff4d6);border-radius:18px;padding:12px 14px;margin-bottom:12px;box-shadow:var(--sh);width:100%;text-align:right;color:var(--txt);font-size:15px}
+.mkrow{display:flex;align-items:center;gap:10px;margin:-2px 0 10px}.mkc{width:74px;height:74px;border-radius:50%;overflow:hidden;background:#e1e1dc;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.12)}.mkc video,.mkc img{width:100%;height:100%;object-fit:cover;display:block}.mkc.hop{animation:hop .5s}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px) rotate(-6deg)}70%{transform:translateY(0) rotate(4deg)}}
+.mkbar{flex:1;height:16px;background:#efe9da;border-radius:10px;overflow:hidden;position:relative}.mkbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#f6c86b,#e9a23b);border-radius:10px}.mkbar.low i{background:linear-gradient(90deg,#ff8a7a,#e8584a)}
+.mks{font-weight:800;font-size:22px;width:34px;text-align:center}.mks.low{color:#d03b3b;animation:pulseT .5s infinite}@keyframes pulseT{50%{transform:scale(1.25)}}
+#mkO{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(30,20,60,.35);z-index:65}#mkO.show{display:flex}
+#mkO .c{width:min(78vw,320px);height:min(78vw,320px);border-radius:50%;overflow:hidden;background:#e1e1dc;box-shadow:0 0 0 8px #fff,0 16px 40px rgba(0,0,0,.3);animation:pop .4s cubic-bezier(.2,1.6,.4,1)}#mkO video{width:100%;height:100%;object-fit:cover}
+#mkO .t{margin-top:18px;background:#fff;border-radius:18px;padding:10px 18px;font-weight:800;font-size:22px;animation:pop .5s}
 .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:26px}
 </style>
 </head>
@@ -150,6 +157,7 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 <div id="app"></div>
 <div id="modal"><div class="box" id="mbox"></div></div>
 <div id="toast"></div>
+<div id="mkO" onclick="mkHide()"><div class="c"><video id="mkOV" src="monkey/clap.mp4" muted playsinline preload="auto"></video></div><div class="t" id="mkOT"></div></div>
 <canvas id="fx"></canvas>
 <script>
 /* ================= קוראים בכיף – חי אפליקציות ================= */
@@ -351,9 +359,9 @@ function goalLabel(k){const u=S.settings.goalType==='minutes'?'דקות':'נקו
 let view='home',curKid=null,P=null,setTab='kids';
 function render(){stopRec();const a=$('app');
  if(view==='home')a.innerHTML=homeHTML();else if(view==='kid')a.innerHTML=kidHTML();else if(view==='practice'){a.innerHTML=practiceHTML();if(P&&!P.learn&&(P._qi!==P.idx)){P._qi=P.idx;P.qT=Date.now();}
-  if(P&&cur()&&cur().type==='game'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&sayKey()===key)playItem(cur().q,true);},450);}
+  if(P&&cur()&&cur().type==='game'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&sayKey()===key)playItem(cur().q,true).then(()=>{if(P&&sayKey()===key)tmStart();});},450);}
   else if(P&&P.learn){if(P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);else{const key=sayKey();const o=P.learnItems[P.li];setTimeout(()=>{if(view==='practice'&&P&&P.learn&&sayKey()===key)playItem(learnQ(),true).then(()=>autoSay(o,true,150));},450);}}
-  else if(P&&cur().type==='tap'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key){if(P.mode==='listen')playItem(cur().q,true);else askAndListen();}},450);}
+  else if(P&&cur().type==='tap'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key){if(P.mode==='listen')playItem(cur().q,true).then(()=>{if(sayKey()===key)tmStart();});else askAndListen();}},450);}
   else if(P&&P.mode!=='listen'&&!isParentMode(cur())&&S.settings.autoListen){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)micTap();},900);}
   else if(P&&P.mode==='listen'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.listening&&sayKey()===key)playItem(cur().text).then(()=>{if(S.settings.autoListen&&!isParentMode(cur())&&view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)setTimeout(()=>micTap(),300);});},450);}}else if(view==='wheel'){a.innerHTML=wheelHTML();drawWheel(0);}else if(view==='settings')a.innerHTML=settingsHTML();else if(view==='report')a.innerHTML=reportHTML();
  window.scrollTo(0,0);}
@@ -377,6 +385,7 @@ function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goal
  <div class="seg" style="margin-bottom:12px"><button class="${k.mode!=='listen'?'on':''}" onclick="setMode('read')">📖 אני קורא לבד</button><button class="${k.mode==='listen'?'on':''}" onclick="setMode('listen')">👂 שומע וחוזר</button><button class="${k.mode==='game'?'on':''}" onclick="setMode('game')">🧩 שינון וחשיבה</button></div>
  ${k.mode==='game'?`<div class="seg" style="margin:-4px 0 12px">${[[1,'🙂 קל'],[2,'😎 בינוני'],[3,'🔥 קשה']].map(o=>`<button class="${(k.gameLvl||1)===o[0]?'on':''}" onclick="kidById(curKid).gameLvl=${o[0]};save();render()">${o[1]}</button>`).join('')}</div>`:''}
  <div class="hint" style="margin:-6px 0 12px;text-align:center">${k.mode==='listen'?'👂 האפליקציה אומרת – והילד מוצא או חוזר אחריה':k.mode==='game'?'🧩 האפליקציה שואלת "איפה...?" – והילד מחפש ומקיש. ככל שהרמה קשה יותר, יש יותר אפשרויות דומות':'📖 הילד אומר בעצמו – והמערכת מקשיבה ובודקת'}</div>
+ <div class="row" style="gap:6px;margin:-4px 0 12px;flex-wrap:wrap;justify-content:center"><b style="font-size:14px">⏱️ טיימר:</b>${[0,3,5,10,15].map(t=>`<button class="tab ${(+k.timer||0)===t?'on':''}" style="padding:7px 11px" onclick="setTimer(${t})">${t?t+' שנ׳':'בלי'}</button>`).join('')}<button class="tab ${k.timer&&![3,5,10,15].includes(+k.timer)?'on':''}" style="padding:7px 11px" onclick="askTimer()">${k.timer&&![3,5,10,15].includes(+k.timer)?k.timer+' שנ׳':'אחר…'}</button></div>
  <button class="btn ok full" style="font-size:20px;padding:18px" onclick="startLevel(${Math.min(k.level,LEVELS.length-1)})">▶️ התחל לקרוא</button>
  ${S.books.length?`<button class="btn ghost full" style="margin-top:14px" onclick="chooseBook()">📚 לקרוא מהספרים שלי</button>`:''}`;
  let w=0;LEVELS.forEach((L,i)=>{if(L.w!==w){w=L.w;html+=`<div class="world">${WORLDS[w].emo} ${WORLDS[w].name}</div>`;}
@@ -387,6 +396,8 @@ function kidHTML(){const k=kidById(curKid);if(!k)return homeHTML();const gr=goal
  return html;}
 
 /* ================= אימון ================= */
+function setTimer(t){const k=kidById(curKid);k.timer=t;save();SND.tap();render();}
+function askTimer(){modal(`<h3 style="margin-top:0">⏱️ כמה שניות?</h3><input class="in" id="tmIn" type="number" min="2" max="120" value="${kidById(curKid).timer||8}" style="font-size:26px;text-align:center"><button class="btn ok full" style="margin-top:12px" onclick="const v=Math.min(120,Math.max(2,+$('tmIn').value||8));closeModal();setTimer(v)">שמירה</button>`);}
 function setMode(m){const k=kidById(curKid);k.mode=m;save();SND.tap();render();}
 function unlockLvl(i){const L=LEVELS[i];modal(`<h3 style="margin-top:0">🔒 שלב ${i+1} · ${esc(L.title)}</h3>
  <div class="mut">השלב ייפתח לבד אחרי שמצליחים בשלב הנוכחי. הורה יכול לפתוח אותו עכשיו עם קוד ההורים${S.pin==='1234'?' (קוד התחלתי: 1234)':''}.</div>
@@ -425,7 +436,7 @@ function gameHTML(){const it=cur();if(!it.q)it.q=gameQ(it);const N=it.opts.lengt
  const cols=t==='sentence'||t==='story'?1:t==='phrase'?(N>4?2:1):N<=4?2:N<=9?3:N<=12?4:5;
  const fs=t==='syll'?(N>12?30:38):t==='word'?(N>9?20:26):t==='phrase'?20:t==='tap'?(N>6?40:52):17;
  const L=it.L;const hide=it.o.text;
- return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 🧩 ${['','קל','בינוני','קשה'][it.g]}</div>
+ return pbarHTML(P.items,P.idx)+mkHTML()+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 🧩 ${['','קל','בינוני','קשה'][it.g]}</div>
  <div class="tq"><div class="tqt" style="font-size:21px">${hide?`👂 ${esc(it.q.slice(0,it.q.lastIndexOf(it.o.say))).trim()} <span id="gAns" style="opacity:.0">${esc(it.o.name)}</span>`:esc(it.q)}</div>
  <div class="row" style="gap:10px"><button class="side" onclick="playItem(cur().q,true)">🔊</button>${hide?`<button class="side" onclick="$('gAns').style.opacity=1;cur()._peek=1">👁️<small>הצג</small></button>`:''}</div></div>
  <div class="gtiles" style="grid-template-columns:repeat(${cols},1fr);font-size:${fs}px">${it.opts.map((o,i)=>`<button class="gtile" id="gt${i}" onclick="gamePick(${i})" ${o.cnt&&L.id==='t9'&&!o.text?'':''}>${o.text?esc(o.name):o.show}</button>`).join('')}</div>
@@ -433,7 +444,7 @@ function gameHTML(){const it=cur();if(!it.q)it.q=gameQ(it);const N=it.opts.lengt
 function gamePick(i){if(!P||P.done)return;const it=cur();const k=kidById(curKid);const el=$('gt'+i);k.mist=k.mist||{};stopSpeak();
  if(it.opts[i]===it.o){P.done=true;track(k,it.key,'ok',qMs());el.classList.add('right');let pts=it.pts;if(P.attempts>0||it._peek)pts=Math.max(1,Math.ceil(pts/2));
   if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
-  P.res[P.idx]=P.attempts===0&&!it._peek;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
+  pts+=tmBonus(pts);P.res[P.idx]=P.attempts===0&&!it._peek;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
   SND.ok();confetti(50);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),300);const a=$('gAns');if(a)a.style.opacity=1;
   $('fb').innerHTML=`<div class="pop big" style="font-size:24px;font-weight:800">${esc(ph)} 🎉</div>`;setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2400);}
  else{track(k,it.key,'bad');P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();el.classList.add('wrong');el.disabled=true;
@@ -471,7 +482,7 @@ function buildQ(it){const k=kidById(curKid);const L=LEVELS[P.lvl];const n=P.qn=(
 function sayQ(L){return({t1:'איזה צבע זה',t2:'איזו צורה זו',t3:'איזו חיה זו',t4:'מה רואים בשמיים',t5:'איזה כלי תחבורה זה',t6:'איזה אוכל זה',t7:'מה זה',t8:'איזה מספר זה',t9:'כמה יש פה'})[L.id]||(L.w===2?'איזו אות זו':'מה זה');}
 function sayQFull(L,k,first){const q=sayQ(L);const v=first?['{שם}, '+q+'?']:['{שם}, '+q+'?',q+', {שם}?','ועכשיו {שם}, '+q+'?',G('בוא נראה {שם}, ','בואי נראה {שם}, ')+q+'?'];return fill(rnd(v),k);}
 function sayHTML(){const it=cur();const k=kidById(curKid);const L=LEVELS[P.lvl];if(!it.sq)it.sq=sayQFull(L,k,P.idx===0);
- return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 📖 אומרים לבד</div>
+ return pbarHTML(P.items,P.idx)+mkHTML()+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(L.title)} · 📖 אומרים לבד</div>
  <div class="card learn"><div class="lvis" style="margin:28px 0 22px">${it.pv?it.pv:it.o.show}</div><div class="tqt">${esc(it.sq)}</div><div class="lname" id="ans" style="display:none">${esc(it.o.name)}</div></div>
  <div class="heard" id="heard">${G('🎤 לחץ על המיקרופון ותגיד בקול','🎤 לחצי על המיקרופון ותגידי בקול')}</div>
  <div class="micwrap"><button class="side" onclick="if(SAY)SAY.abort();askAndListen()">❓<small>שאלה</small></button><button class="mic" id="mic" onclick="sayListen(cur().o,false)">🎤</button><button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
@@ -509,20 +520,20 @@ function sayListen(o,isLearn,auto){if(SAY){if(!auto)SAY.stop();return;}
  run();}
 function autoSay(o,isLearn,delay){if(!S.settings.autoListen||!CAN_LISTEN()||(P&&P.micDenied))return;const key=sayKey();
  setTimeout(()=>{if(view==='practice'&&P&&!P.done&&sayKey()===key&&!SAY&&!P.listening)sayListen(o,isLearn,true);},delay||250);}
-function askAndListen(){const it=cur();playItem(it.sq,true).then(()=>autoSay(it.o,false,150));}
+function askAndListen(){const it=cur();playItem(it.sq,true).then(()=>{if(P&&cur()===it)tmStart();autoSay(it.o,false,150);});}
 function learnSaid(ok){const k=kidById(curKid);if(ok){SND.ok();confetti(40);const ph=fill(rnd(kidPraise(k)),k);$('fb').innerHTML=`<div class="pop big" style="font-size:24px;font-weight:800">${esc(ph)} 🎉</div>`;cheerSay([ph]);setTimeout(()=>{if(P&&P.learn&&view==='practice')learnNext();},2300);}
  else{SND.fail();const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>`;const o=P.learnItems[P.li];showSayParent(true);cheerSay([e,shortQ()]).then(()=>autoSay(o,true,200));}}
 function showSayParent(isLearn){const fb=$('fb');if(!fb||document.getElementById('sayPar'))return;
  fb.insertAdjacentHTML('afterend',`<div class="parentrow" id="sayPar" style="margin-top:14px"><button class="btn ok" onclick="if(SAY)SAY.abort();stopSpeak();${isLearn?'learnSaid(true)':"sayResult(true,'')"}">✅ ${G('אמר נכון','אמרה נכון')}</button><button class="btn ghost" onclick="${isLearn?'learnNext()':'skipItem()'}">⏭ הלאה</button></div><div class="hint" style="text-align:center">👨 כפתורים להורה – אם המערכת לא שמעה טוב</div>`);}
 function sayResult(ok,heard){if(!P||P.done)return;if(SAY)SAY.abort();const it=cur();const k=kidById(curKid);k.mist=k.mist||{};
  if(ok){P.done=true;track(k,it.key,'ok',qMs());let pts=it.pts*2;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
-  P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();const a=$('ans');if(a)a.style.display='block';
+  pts+=tmBonus(pts);P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();const a=$('ans');if(a)a.style.display='block';
   SND.ok();confetti(60);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),400);
   $('fb').innerHTML=`<div class="pop big" style="font-size:26px;font-weight:800">${esc(ph)} 🎉</div>`;setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2700);}
  else{track(k,it.key,'bad');P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();const e=fill(rnd(kidEnc(k)),k);
   $('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>${P.attempts>=2?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="$('ans').style.display='block';playItem(cur().o.name)">💡 רמז – איך אומרים?</button><button class="btn sm ghost" onclick="skipItem()">נמשיך ➜</button></div>`:''}`;const o=it.o;showSayParent(false);cheerSay([e,shortQ()]).then(()=>{if(P&&P.attempts<3)autoSay(o,false,200);});}}
 function tapHTML(){const it=cur();if(P.mode!=='listen')return sayHTML();if(!it.q)buildQ(it);
- return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(LEVELS[P.lvl].title)}</div>
+ return pbarHTML(P.items,P.idx)+mkHTML()+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(LEVELS[P.lvl].title)}</div>
  <div class="tq">${it.pv||''}<div class="tqt">${it.qHTML}</div><button class="side" onclick="playItem(cur().q,true)">🔊</button></div>
  <div class="tiles ${it.opts.length>3?'four':''}">${it.opts.map((o,i)=>`<button class="tile" id="tile${i}" onclick="tapPick(${i})">${o.show}</button>`).join('')}</div><div class="fb" id="fb"></div>`;}
 /* ================= מעקב חכם אחרי הילד ================= */
@@ -531,10 +542,34 @@ function track(k,key,res,ms){if(!k||!key)return;k.st=k.st||{};const r=k.st[key]=
  else if(res==='bad'){r.a++;r.ls=Date.now();}
  else if(res==='skip'){r.p++;r.ls=Date.now();}}
 function qMs(){return P&&P.qT?Date.now()-P.qT:0;}
+/* ================= טיימר הקוף ================= */
+const kTimer=()=>{const k=curKid&&kidById(curKid);return k?(+k.timer||0):0;};
+function timerOn(){return !!(P&&kTimer()>0&&!P.learn&&cur()&&['tap','game'].includes(cur().type));}
+function mkHTML(){if(!timerOn())return'';const s=kTimer();return `<div class="mkrow"><div class="mkc" id="mkc"><video id="mkV" src="monkey/count.mp4" poster="monkey/count.jpg" muted loop playsinline preload="auto"></video></div><div class="mkbar" id="mkbar"><i id="mkfill" style="width:100%"></i></div><div class="mks" id="mks">${s}</div></div>`;}
+function tmStart(){if(!timerOn()||P.done)return;if(P.tm&&P.tm.idx===P.idx)return;const s=kTimer();P.tm={idx:P.idx,t0:Date.now(),dur:s*1000,done:false,last:s};
+ const c=$('mkc');if(c){c.classList.remove('hop');void c.offsetWidth;c.classList.add('hop');}const v=$('mkV');if(v){try{v.currentTime=0;v.play().catch(()=>{});}catch(e){}}
+ if(S.settings.sound){tone(520,0,.12,'sine',.08);tone(780,.1,.18,'sine',.08);}
+ clearInterval(P.tmI);P.tmI=setInterval(tmTick,100);tmTick();}
+function tmTick(){if(!P||!P.tm||P.tm.done){if(P)clearInterval(P.tmI);return;}const T=P.tm,left=Math.max(0,T.dur-(Date.now()-T.t0)),sec=Math.ceil(left/1000);
+ const f=$('mkfill'),sb=$('mks'),bar=$('mkbar');if(f)f.style.width=(left/T.dur*100)+'%';if(sb){sb.textContent=sec;sb.classList.toggle('low',sec<=3&&T.dur>3000);}if(bar)bar.classList.toggle('low',left<T.dur*.3);
+ if(sec!==T.last){T.last=sec;if(sec>0&&sec<=3&&S.settings.sound)tone(1200,0,.05,'square',.05);}
+ if(left<=0){T.done=true;T.out=true;clearInterval(P.tmI);mkTimeUp();}}
+function tmStop(){if(P){clearInterval(P.tmI);if(P.tm)P.tm.done=true;}const v=$('mkV');if(v)try{v.pause();}catch(e){}}
+function tmBonus(pts){if(!P||!P.tm||P.tm.idx!==P.idx||P.tm.out)return(tmStop(),0);const b=Math.max(1,Math.ceil(pts*.5));tmStop();setTimeout(()=>{const fb=$('fb');if(fb)fb.insertAdjacentHTML('beforeend',`<div class="pop" style="color:#e9a23b;font-weight:800;font-size:18px">⚡ ${G('מהיר','מהירה')}! בונוס +${b}</div>`);},50);return b;}
+function funnySounds(){if(!S.settings.sound)return;const a=ac();if(!a)return;
+ const crash=t0=>{const len=a.sampleRate*.7,b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.5);const s=a.createBufferSource();s.buffer=b;const h=a.createBiquadFilter();h.type='highpass';h.frequency.value=5000;const g=a.createGain();g.gain.value=.22;s.connect(h).connect(g).connect(a.destination);s.start(a.currentTime+t0);};
+ crash(0);crash(.38);
+ const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+.75;o.type='sine';o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(620,t+.18);o.frequency.exponentialRampToValueAtTime(260,t+.45);
+ const l=a.createOscillator(),lg=a.createGain();l.frequency.value=18;lg.gain.value=30;l.connect(lg).connect(o.frequency);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.03);g.gain.exponentialRampToValueAtTime(.001,t+.6);o.connect(g).connect(a.destination);o.start(t);l.start(t);o.stop(t+.65);l.stop(t+.65);
+ const w=a.createOscillator(),wg=a.createGain(),t2=a.currentTime+1.45;w.type='triangle';w.frequency.setValueAtTime(400,t2);w.frequency.linearRampToValueAtTime(900,t2+.25);w.frequency.linearRampToValueAtTime(350,t2+.6);wg.gain.setValueAtTime(0,t2);wg.gain.linearRampToValueAtTime(.12,t2+.05);wg.gain.exponentialRampToValueAtTime(.001,t2+.7);w.connect(wg).connect(a.destination);w.start(t2);w.stop(t2+.72);}
+let mkHT=null;
+function mkTimeUp(){const o=$('mkO'),v=$('mkOV');if(!o)return;$('mkOT').textContent=rnd(['⏰ אוּפְּס! נגמר הזמן!','🐒 הקוף ניצח הפעם!','⏰ טיק־טק... נגמר!']);o.classList.add('show');
+ try{v.currentTime=0;v.play().catch(()=>{});}catch(e){}funnySounds();clearTimeout(mkHT);mkHT=setTimeout(mkHide,4200);}
+function mkHide(){const o=$('mkO'),v=$('mkOV');if(o)o.classList.remove('show');if(v)try{v.pause();}catch(e){}clearTimeout(mkHT);}
 function tapPick(i){if(!P||P.done)return;const it=cur();const k=kidById(curKid);const el=$('tile'+i);k.mist=k.mist||{};
  if(it.opts[i]===it.o){P.done=true;track(k,it.key,'ok',qMs());el.classList.add('right');let pts=it.pts;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));
   if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
-  P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
+  pts+=tmBonus(pts);P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();
   SND.ok();confetti(50);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),400);
   $('fb').innerHTML=`<div class="pop big" style="font-size:26px;font-weight:800">${esc(ph)} 🎉</div>`;
   setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2700);}
@@ -551,7 +586,7 @@ function practiceHTML(){if(cur().type==='game')return gameHTML();if(P.learn)retu
  <button class="side" onclick="skipItem()">⏭<small>דלג</small></button></div>
  ${pm?`<div class="parentrow" id="pbtns"><button class="btn ok" onclick="parentJudge(true)">✅ קרא נכון</button><button class="btn warn" onclick="parentJudge(false)">🔁 עוד פעם</button></div>`:`<div style="text-align:center"><button class="linkbtn" onclick="parentJudge(true)">👨 אישור הורה (אם המערכת לא שמעה טוב)</button></div>`}
  <div class="fb" id="fb"></div>`;}
-function quitSession(){stopRec();if(P&&P.idx>0&&!P.done){if(!confirm('לצאת מהאימון? הנקודות שנצברו יישמרו.'))return;finishSession(true);return;}go('kid');}
+function quitSession(){tmStop();mkHide();stopRec();if(P&&P.idx>0&&!P.done){if(!confirm('לצאת מהאימון? הנקודות שנצברו יישמרו.'))return;finishSession(true);return;}go('kid');}
 
 /* --- זיהוי דיבור --- */
 /* --- זיהוי דיבור של אנדרואיד (באפליקציה המותקנת) – באותו ממשק של הדפדפן --- */
@@ -572,7 +607,7 @@ class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interi
  _end(){if(this.ended)return;this.ended=true;if(NSR_CUR===this)NSR_CUR=null;if(this.onend)this.onend();}}
 const SRC=(KS?NativeSR:null)||window.SpeechRecognition||window.webkitSpeechRecognition;
 let REC=null;
-function stopRec(){if(SAY)SAY.abort();if(P){P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);}if(REC){const r=REC;REC=null;try{r.abort();}catch(e){}}}
+function stopRec(){if(SAY)SAY.abort();if(P&&P.tmI&&view!=='practice'){tmStop();}if(P){P.listening=false;P.userStop=true;clearTimeout(P.maxT);clearInterval(P.tick);}if(REC){const r=REC;REC=null;try{r.abort();}catch(e){}}}
 function micTap(){if(!P||P.done)return;if(P.listening){finishListening();return;}
  stopSpeak();const it=cur();const sent=TYPE[it.type].sent;const noRec=!CAN_LISTEN()||P.micDenied;
  if(noRec&&!sent){toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתורים');return;}
@@ -649,8 +684,8 @@ function judge(ev,byParent){const it=cur();const k=kidById(curKid);const sent=TY
   $('fb').innerHTML=`<div class="pop"><div class="big" style="font-size:21px">${esc(enc)} 💪</div>${sent&&ev.total>1?`${scoreHTML}<div class="mut">המילים באדום נקראו לא נכון – מתחת לכל אחת כתוב מה נשמע</div>`:(said[0]?`<div class="mut">נשמע: ${esc(said[0])}</div>`:'')}
    ${P.attempts>=3?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="playItem(cur().text)">${G('🔊 שמע איך קוראים','🔊 שמעי איך קוראים')}</button><button class="btn sm ghost" onclick="skipItem()">נמשיך הלאה ➜</button></div>`:''}</div>`;}}
 function skipItem(){if(!P)return;stopRec();if(!P.done&&!P.learn){track(kidById(curKid),cur().key,'skip');}if(!P.done){P.res[P.idx]=false;const k=kidById(curKid);k.mist=k.mist||{};const key=cur().key;k.mist[key]=(k.mist[key]||0)+1;save();}nextItem();}
-function nextItem(){if(!P)return;stopSpeak();P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
-function finishSession(early){stopRec();const k=kidById(curKid);const sec=Math.round((Date.now()-P.start)/1000);
+function nextItem(){if(!P)return;stopSpeak();tmStop();mkHide();P.idx++;P.attempts=0;P.done=false;P.parentShown=false;if(P.idx>=P.items.length){finishSession(false);return;}render();}
+function finishSession(early){tmStop();mkHide();stopRec();const k=kidById(curKid);const sec=Math.round((Date.now()-P.start)/1000);
  k.goalSec=(k.goalSec||0)+sec;k.totalSec=(k.totalSec||0)+sec;
  const n=P.res.length||1;const good=P.res.filter(Boolean).length;const acc=good/Math.max(1,P.items.length);
  let lvlMsg='',leveled=false;
