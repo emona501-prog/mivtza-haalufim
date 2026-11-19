@@ -133,7 +133,7 @@ label.f{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 .tile:active{transform:translateY(3px)}
 .tile.right{background:#d4f5e4;box-shadow:0 6px 0 #9fe0bd;animation:pop .45s}.tile.wrong{opacity:.3;animation:shake .4s}
 .dot{display:inline-block;width:74px;height:74px;border-radius:50%;border:3px solid rgba(0,0,0,.1)}
-.shp{width:80px;height:80px}.emo{font-size:60px;line-height:1}.pic{width:100px;height:100px;object-fit:contain;display:block;margin:0 auto}.lvis{display:flex;flex-direction:column;justify-content:center;align-items:center}.mic:not(.on){transform:none!important;filter:none!important}.dig{font-size:64px;font-weight:800;color:var(--pri)}
+.shp{width:80px;height:80px}.emo{font-size:60px;line-height:1}.pic{width:100px;height:100px;object-fit:contain;display:block;margin:0 auto}.lvis{display:flex;flex-direction:column;justify-content:center;align-items:center}.mic:not(.on){transform:none!important;filter:none!important}.mic.wait{background:#b9b4cc;box-shadow:0 8px 0 #9a94b3;animation:none}.mic.go{background:linear-gradient(135deg,#22c55e,#12a150);box-shadow:0 8px 0 #0e7f3f;animation:micg 1s infinite}@keyframes micg{0%,100%{box-shadow:0 8px 0 #0e7f3f,0 0 0 0 rgba(34,197,94,.55)}50%{box-shadow:0 8px 0 #0e7f3f,0 0 0 18px rgba(34,197,94,0)}}.dig{font-size:64px;font-weight:800;color:var(--pri)}
 .let{font-family:'Frank Ruhl Libre',serif;font-size:74px;font-weight:700;color:var(--pri);line-height:1}
 .cntv{font-size:44px;letter-spacing:6px;line-height:1.35;max-width:320px}
 .learn{text-align:center;padding:26px 16px;cursor:pointer}.lvis{transform:scale(1.7);margin:34px 0 30px}.lname{font-family:'Frank Ruhl Libre',serif;font-size:50px;font-weight:700}
@@ -345,7 +345,7 @@ function goalLabel(k){const u=S.settings.goalType==='minutes'?'דקות':'נקו
 let view='home',curKid=null,P=null,setTab='kids';
 function render(){stopRec();const a=$('app');
  if(view==='home')a.innerHTML=homeHTML();else if(view==='kid')a.innerHTML=kidHTML();else if(view==='practice'){a.innerHTML=practiceHTML();
-  if(P&&P.learn){if(P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);else autoSay(P.learnItems[P.li],true,600);}
+  if(P&&P.learn){if(P.mode==='listen')setTimeout(()=>{if(view==='practice'&&P&&P.learn)playItem(P.learnItems[P.li].name);},400);else{const key=sayKey();const o=P.learnItems[P.li];setTimeout(()=>{if(view==='practice'&&P&&P.learn&&sayKey()===key)playItem(learnQ(),true).then(()=>autoSay(o,true,150));},450);}}
   else if(P&&cur().type==='tap'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key){if(P.mode==='listen')playItem(cur().q,true);else askAndListen();}},450);}
   else if(P&&P.mode!=='listen'&&!isParentMode(cur())&&S.settings.autoListen){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)micTap();},900);}
   else if(P&&P.mode==='listen'){const key=sayKey();setTimeout(()=>{if(view==='practice'&&P&&!P.listening&&sayKey()===key)playItem(cur().text).then(()=>{if(S.settings.autoListen&&!isParentMode(cur())&&view==='practice'&&P&&!P.done&&!P.listening&&sayKey()===key)setTimeout(()=>micTap(),300);});},450);}}else if(view==='wheel'){a.innerHTML=wheelHTML();drawWheel(0);}else if(view==='settings')a.innerHTML=settingsHTML();
@@ -406,9 +406,11 @@ function isParentMode(it){return it.type==='syll'||S.settings.verify==='parent'|
 function pbarHTML(list,pos,isLearn){const k=kidById(curKid);return `<div class="pbar"><button class="ibtn" onclick="quitSession()">✕</button><div class="pdots">${list.map((_,i)=>`<b class="${i<pos?(isLearn||P.res[i]?'ok':'no'):i===pos?'cur':''}"></b>`).join('')}</div>${avatar(k,'sm')}</div>`;}
 function learnHTML(){const L=LEVELS[P.lvl];const o=P.learnItems[P.li];const vis=(o.cnt?`<div class="cntv">${'🍎'.repeat(o.cnt)}</div>`:'')+o.show;
  return pbarHTML(P.learnItems,P.li,true)+`<div class="mut" style="text-align:center;margin-bottom:8px">${G('🃏 בוא נכיר','🃏 בואי נכיר')} · ${esc(L.title)}</div>
- <div class="card learn" ${P.mode==='listen'?'onclick="playItem(P.learnItems[P.li].name)"':''}><div class="lvis">${vis}</div><div class="lname">${esc(o.name)}</div></div>
+ <div class="card learn" ${P.mode==='listen'?'onclick="playItem(P.learnItems[P.li].name)"':''}><div class="lvis">${vis}</div><div class="lname">${esc(o.name)}</div>${P.mode==='listen'?'':`<div class="tqt" style="font-size:20px;margin-top:6px">${esc(learnQ())}</div>`}</div>
  ${P.mode==='listen'?'':`<div class="heard" id="heard">${G('🎤 לחץ על המיקרופון ותגיד בקול: מה זה?','🎤 לחצי על המיקרופון ותגידי בקול: מה זה?')}</div><div class="micwrap"><button class="side" onclick="playItem(P.learnItems[P.li].name)">🔊<small>שמע</small></button><button class="mic" id="mic" onclick="sayListen(P.learnItems[P.li],true)">🎤</button><span style="width:60px"></span></div><div class="fb" id="fb"></div>`}
  <div class="row"><button class="btn ghost sp" onclick="playItem(P.learnItems[P.li].name)">🔊 ${P.mode==='listen'?'שוב':'איך אומרים?'}</button><button class="btn ok sp" onclick="learnNext()">${P.li<P.learnItems.length-1?'הבא ➜':G('🎮 בוא נשחק!','🎮 בואי נשחק!')}</button></div>`;}
+function learnQ(){const o=P.learnItems[P.li];if(!o._q)o._q=sayQFull(LEVELS[P.lvl],kidById(curKid),P.li===0);return o._q;}
+function shortQ(){return sayQ(LEVELS[P.lvl])+'?';}
 function learnNext(){SND.tap();P.li++;if(P.li>=P.learnItems.length){P.learn=false;P.start=Date.now();}render();}
 function buildQ(it){const k=kidById(curKid);const L=LEVELS[P.lvl];const n=P.qn=(P.qn||0)+1;let tpl;
  if(it.o.cnt)tpl=n===1?(isF(k)?'בואי נספור, {שם}! כמה יש?':'בוא נספור, {שם}! כמה יש?'):rnd(['ועכשיו, כמה יש?','{שם}, כמה יש פה?',G('בוא נספור שוב, כמה יש?','בואי נספור שוב, כמה יש?')]);
@@ -438,16 +440,16 @@ let SAY=null;
 function sayKey(){return P?(P.learn?'L'+P.li:'Q'+P.idx)+'|'+P.attempts:'';}
 function sayListen(o,isLearn,auto){if(SAY){if(!auto)SAY.stop();return;}
  if(!CAN_LISTEN()||(P&&P.micDenied)){if(!auto)toast('🎤 המיקרופון לא זמין כאן – ההורה מאשר בכפתור');return;}
- const L=P&&P.lvl!==undefined?LEVELS[P.lvl]:null;const t0=Date.now(),win=(S.settings.answerSec||6)*1000;const alts=new Set();let hit=false,stopped=false,dead=false,rec=null;
- const ui=on=>{const m=$('mic');if(m){m.classList.toggle('on',on);m.textContent=on?'⏹':'🎤';if(!on){m.style.transform='';m.style.filter='';}}};
- const tick=setInterval(()=>{if(!alts.size&&$('heard')){const left=Math.max(0,Math.ceil((win-(Date.now()-t0))/1000));$('heard').textContent=G('🎧 מקשיב... תגיד בקול (','🎧 מקשיב... תגידי בקול (')+left+')';}},250);
+ const L=P&&P.lvl!==undefined?LEVELS[P.lvl]:null;const t0=Date.now(),win=(S.settings.answerSec||6)*1000;const alts=new Set();let hit=false,stopped=false,dead=false,rec=null,ready=false,spoke=false;
+ const ui=on=>{const m=$('mic');if(m){m.classList.toggle('on',on);m.classList.toggle('wait',on&&!ready);m.classList.toggle('go',on&&ready);m.textContent=on?(ready?'🎤':'⏳'):'🎤';if(!on){m.style.transform='';m.style.filter='';}}};
+ const tick=setInterval(()=>{if(!alts.size&&$('heard')){if(!ready){$('heard').textContent='⏳ רגע...';return;}const left=Math.max(0,Math.ceil((win-(Date.now()-t0))/1000));$('heard').textContent=G('🎧 מקשיב... תגיד בקול (','🎧 מקשיב... תגידי בקול (')+left+')';}},250);
  const ctl={stop(){stopped=true;try{rec&&rec.stop();}catch(e){}},abort(){dead=true;stopped=true;clearInterval(tick);clearTimeout(timer);try{rec&&rec.abort();}catch(e){}if(SAY===ctl)SAY=null;REC=null;ui(false);}};
  SAY=ctl;ui(true);if($('fb'))$('fb').innerHTML='';
  const finish=()=>{if(dead)return;dead=true;clearInterval(tick);clearTimeout(timer);ui(false);if(SAY===ctl)SAY=null;REC=null;const l=[...alts];
-  if(!l.length){if($('heard'))$('heard').textContent=G('🙉 לא שמעתי. לחץ על 🎤 ותגיד בקול רם','🙉 לא שמעתי. לחצי על 🎤 ותגידי בקול רם');return;}
+  if(!l.length){if($('heard'))$('heard').textContent=spoke?G('👂 שמעתי קול אבל לא הבנתי. לחץ על 🎤 ותגיד שוב, לאט וברור','👂 שמעתי קול אבל לא הבנתי. לחצי על 🎤 ותגידי שוב, לאט וברור'):G('🙉 לא שמעתי. לחץ על 🎤 ותגיד בקול רם','🙉 לא שמעתי. לחצי על 🎤 ותגידי בקול רם');showSayParent(isLearn);return;}
   const r=sayScore(l,o,L);if(isLearn)learnSaid(r.ok);else sayResult(r.ok,r.heard);};
  const timer=setTimeout(()=>ctl.stop(),win);
- const run=()=>{if(dead)return;const r=new SRC();rec=r;r.lang='he-IL';r.interimResults=true;r.maxAlternatives=10;r.continuous=false;r.hints=hintsFor(L,o);r.short=true;REC=r;
+ const run=()=>{if(dead)return;const r=new SRC();rec=r;r.lang='he-IL';r.interimResults=true;r.maxAlternatives=10;r.continuous=false;r.hints=hintsFor(L,o);r.short=true;REC=r;ready=false;ui(true);r.onready=r.onaudiostart=()=>{if(dead||rec!==r)return;ready=true;ui(true);};r.onspeech=r.onspeechstart=()=>{spoke=true;};
   r.onresult=e=>{if(dead)return;for(let i=0;i<e.results.length;i++)Array.from(e.results[i]).forEach(a=>alts.add(a.transcript));const l=[...alts];if($('heard'))$('heard').textContent='🎧 '+(l[0]||'');
    if(!hit&&sayScore(l,o,L).ok){hit=true;ctl.stop();}};
   r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){if(P)P.micDenied=true;stopped=true;toast('🎤 צריך לאשר גישה למיקרופון');}};
@@ -458,14 +460,16 @@ function autoSay(o,isLearn,delay){if(!S.settings.autoListen||!CAN_LISTEN()||(P&&
  setTimeout(()=>{if(view==='practice'&&P&&!P.done&&sayKey()===key&&!SAY&&!P.listening)sayListen(o,isLearn,true);},delay||250);}
 function askAndListen(){const it=cur();playItem(it.sq,true).then(()=>autoSay(it.o,false,150));}
 function learnSaid(ok){const k=kidById(curKid);if(ok){SND.ok();confetti(40);const ph=fill(rnd(kidPraise(k)),k);$('fb').innerHTML=`<div class="pop big" style="font-size:24px;font-weight:800">${esc(ph)} 🎉</div>`;cheerSay([ph]);setTimeout(()=>{if(P&&P.learn&&view==='practice')learnNext();},2300);}
- else{SND.fail();const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>`;const o=P.learnItems[P.li];cheerSay([e]).then(()=>autoSay(o,true,200));}}
+ else{SND.fail();const e=fill(rnd(kidEnc(k)),k);$('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>`;const o=P.learnItems[P.li];showSayParent(true);cheerSay([e,shortQ()]).then(()=>autoSay(o,true,200));}}
+function showSayParent(isLearn){const fb=$('fb');if(!fb||document.getElementById('sayPar'))return;
+ fb.insertAdjacentHTML('afterend',`<div class="parentrow" id="sayPar" style="margin-top:14px"><button class="btn ok" onclick="if(SAY)SAY.abort();stopSpeak();${isLearn?'learnSaid(true)':"sayResult(true,'')"}">✅ ${G('אמר נכון','אמרה נכון')}</button><button class="btn ghost" onclick="${isLearn?'learnNext()':'skipItem()'}">⏭ הלאה</button></div><div class="hint" style="text-align:center">👨 כפתורים להורה – אם המערכת לא שמעה טוב</div>`);}
 function sayResult(ok,heard){if(!P||P.done)return;if(SAY)SAY.abort();const it=cur();const k=kidById(curKid);k.mist=k.mist||{};
  if(ok){P.done=true;let pts=it.pts*2;if(P.attempts>0)pts=Math.max(1,Math.ceil(pts/2));if(P.attempts===0&&k.mist[it.key]){k.mist[it.key]--;if(k.mist[it.key]<=0)delete k.mist[it.key];}
   P.res[P.idx]=P.attempts===0;P.earned+=pts;k.points=(k.points||0)+pts;k.goalPts=(k.goalPts||0)+pts;save();const a=$('ans');if(a)a.style.display='block';
   SND.ok();confetti(60);plusPts(pts);const ph=fill(rnd(kidPraise(k)),k);setTimeout(()=>cheerSay([ph]),400);
   $('fb').innerHTML=`<div class="pop big" style="font-size:26px;font-weight:800">${esc(ph)} 🎉</div>`;setTimeout(()=>{if(P&&P.done&&view==='practice')nextItem();},2700);}
  else{P.attempts++;k.mist[it.key]=(k.mist[it.key]||0)+1;save();SND.fail();const e=fill(rnd(kidEnc(k)),k);
-  $('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>${P.attempts>=2?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="$('ans').style.display='block';playItem(cur().o.name)">💡 רמז – איך אומרים?</button><button class="btn sm ghost" onclick="skipItem()">נמשיך ➜</button></div>`:''}`;const o=it.o;cheerSay([e]).then(()=>{if(P&&P.attempts<3)autoSay(o,false,200);});}}
+  $('fb').innerHTML=`<div class="pop" style="font-size:20px;font-weight:700">${esc(e)} 💪</div>${P.attempts>=2?`<div class="row" style="justify-content:center;margin-top:10px;gap:8px"><button class="btn sm" onclick="$('ans').style.display='block';playItem(cur().o.name)">💡 רמז – איך אומרים?</button><button class="btn sm ghost" onclick="skipItem()">נמשיך ➜</button></div>`:''}`;const o=it.o;showSayParent(false);cheerSay([e,shortQ()]).then(()=>{if(P&&P.attempts<3)autoSay(o,false,200);});}}
 function tapHTML(){const it=cur();if(P.mode!=='listen')return sayHTML();if(!it.q)buildQ(it);
  return pbarHTML(P.items,P.idx)+`<div class="mut" style="text-align:center;margin-bottom:8px">שלב ${P.lvl+1} · ${esc(LEVELS[P.lvl].title)}</div>
  <div class="tq">${it.pv||''}<div class="tqt">${it.qHTML}</div><button class="side" onclick="playItem(cur().q,true)">🔊</button></div>
@@ -500,10 +504,10 @@ function bindNSR(){if(NSR_BOUND||!KS)return;NSR_BOUND=true;
  KS.addListener('result',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;c._emit(ev.matches||[],!!ev.final);});
  KS.addListener('error',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if([6,7,8].indexOf(ev.code)<0)toast('⚠️ מנוע הדיבור החזיר שגיאה (קוד '+ev.code+')');c._err(NSR_ERR[ev.code]||'aborted');});
  KS.addListener('rms',ev=>{const m=document.getElementById('mic');if(!m||!m.classList.contains('on'))return;const v=Math.max(0,Math.min(1,((ev.db||0)+2)/12));m.style.transform='scale('+(1+v*.22).toFixed(3)+')';m.style.filter='brightness('+(1+v*.35).toFixed(2)+')';});
- KS.addListener('state',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if(ev.state==='speech'&&P&&P.listening&&P.heard&&!P.heard.firstT)P.heard.firstT=performance.now();if(ev.state==='stopped')c._end();});}
+ KS.addListener('state',ev=>{const c=NSR_CUR;if(!c||ev.sid!==c.sid)return;if(ev.state==='ready'&&c.onready)c.onready();if(ev.state==='speech'&&c.onspeech)c.onspeech();if(ev.state==='speech'&&P&&P.listening&&P.heard&&!P.heard.firstT)P.heard.firstT=performance.now();if(ev.state==='stopped')c._end();});}
 class NativeSR{constructor(){this.lang='he-IL';this.continuous=false;this.interimResults=true;this.maxAlternatives=5;this.sid=-2;this.finals=[];this.ended=false;}
  async start(){NSR_CUR=this;bindNSR();try{const p=await KS.ensurePermission();if(NSR_CUR!==this)return;if(!p||!p.granted){this._err('not-allowed');this._end();return;}
-  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?1100:(this.continuous?2200:1400),hints:this.hints||[],engine:S.settings.engine2||'default'});this.sid=r&&r.sid;if(NSR_CUR!==this){try{KS.cancel().catch(()=>{});}catch(e){}}}catch(e){this._err('aborted');this._end();}}
+  const r=await KS.start({language:this.lang,maxResults:this.maxAlternatives,silenceMs:this.short?1500:(this.continuous?2200:1400),hints:this.hints||[],engine:S.settings.engine2||'default'});this.sid=r&&r.sid;if(NSR_CUR!==this){try{KS.cancel().catch(()=>{});}catch(e){}}}catch(e){this._err('aborted');this._end();}}
  stop(){try{KS.stop().catch(()=>{});}catch(e){}}
  abort(){const was=NSR_CUR===this;this.ended=true;if(was){NSR_CUR=null;try{KS.cancel().catch(()=>{});}catch(e){}}}
  _emit(matches,fin){const alts=matches.map(t=>({transcript:t}));const res=this.finals.map(a=>{const x=a.slice();x.isFinal=true;return x;});const cur=alts.slice();cur.isFinal=fin;res.push(cur);if(fin)this.finals.push(alts);if(this.onresult)this.onresult({resultIndex:0,results:res});}
